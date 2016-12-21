@@ -10,7 +10,7 @@ import htsjdk.samtools.SAMRecord;
  * <p>
  * The read represented by this object may be unmapped.
  */
-public class SingleRead extends SamRecordImpl implements Alignable<SingleReadAlignment> {
+public class SingleRead extends SamRecordImpl implements Aligned<SingleReadAlignment> {
 
     /**
      * Constructs an instance from an htsjdk <code>SAMRecord</code> object.

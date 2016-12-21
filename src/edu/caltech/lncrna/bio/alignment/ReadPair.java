@@ -12,7 +12,7 @@ import htsjdk.samtools.SAMFileWriter;
  * If both reads are aligned, a corresponding <code>PairedEndAlignment</code>
  * can be retrieved with <code>getAlignment()</code>.
  */
-public class ReadPair implements PairedSamRecord, Alignable<PairedEndAlignment> {
+public class ReadPair implements PairedSamRecord, Aligned<PairedEndAlignment> {
 
     private final SingleRead read1;
     private final SingleRead read2;

@@ -14,7 +14,7 @@ import htsjdk.samtools.SAMRecord;
  * This class represents a single read from a SAM file for which a valid
  * alignment has been found.
  */
-public final class SingleReadAlignment extends SamRecordImpl implements Aligned {
+public final class SingleReadAlignment extends SamRecordImpl implements Alignment {
 
     private final Annotated annot;
     

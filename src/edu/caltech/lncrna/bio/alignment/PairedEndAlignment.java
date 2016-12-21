@@ -13,7 +13,7 @@ import htsjdk.samtools.SAMFileWriter;
 /**
  * This class represents a successfully aligned paired-end fragment.
  */
-public final class PairedEndAlignment implements PairedSamRecord, Aligned {
+public final class PairedEndAlignment implements PairedSamRecord, Alignment {
     
     private final SingleReadAlignment read1;
     private final SingleReadAlignment read2;
