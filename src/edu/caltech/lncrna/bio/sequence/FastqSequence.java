@@ -133,7 +133,7 @@ public final class FastqSequence extends FastaSequence {
     
     public String toFormattedString(PhredEncoding pe) {
         return "@" + name + nl + sequence + nl + "+" + nl +
-                pe.phredToString(quality);
+                pe.phredToString(quality) + nl;
     }
     
     public boolean hasAnyBaseWithQualityLessThan(byte minimumAllowedQuality) {

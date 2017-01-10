@@ -19,4 +19,6 @@ public interface Sequence {
      * Gets the name of this.
      */
     public String getName();
+    
+    public int length();
 }

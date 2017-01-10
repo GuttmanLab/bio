@@ -74,6 +74,7 @@ public class FastaSequence implements Sequence, AnnotationFileRecord {
         return new FastaSequence(name, subseq);
     }
     
+    @Override
     public int length() {
         return sequence.length();
     }
@@ -90,7 +91,7 @@ public class FastaSequence implements Sequence, AnnotationFileRecord {
     }
     
     public String toFasta() {
-        return ">" + name + nl + sequence;
+        return ">" + name + nl + sequence + nl;
     }
     
     @Override

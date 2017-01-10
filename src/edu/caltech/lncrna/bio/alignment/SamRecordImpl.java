@@ -34,6 +34,11 @@ public abstract class SamRecordImpl implements SamRecord {
     }
     
     @Override
+    public int length() {
+        return getBases().length();
+    }
+    
+    @Override
     public boolean isPaired() {
         return samRecord.getReadPairedFlag();
     }
