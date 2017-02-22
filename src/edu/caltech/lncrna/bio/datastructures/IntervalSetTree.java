@@ -183,7 +183,7 @@ public class IntervalSetTree<T extends Interval> implements Iterable<T> {
      * Interval
      * @param t - the overlapping Interval
      */
-    public int numOverlappers(T t) {
+    public int numOverlappers(Interval t) {
         return root.numOverlappingIntervals(t);
     }
     
@@ -646,7 +646,7 @@ public class IntervalSetTree<T extends Interval> implements Iterable<T> {
          * @param t - the overlapping Interval
          * @return the number of overlapping Nodes
          */
-        private int numOverlappingIntervals(T t) {
+        private int numOverlappingIntervals(Interval t) {
             int count = 0;
             Iterator<Node> iter = new OverlappingNodeIterator(this, t);
             
@@ -1177,9 +1177,9 @@ public class IntervalSetTree<T extends Interval> implements Iterable<T> {
     private class OverlappingNodeIterator implements Iterator<Node> {
         
         private Node next;
-        private T interval;
+        private Interval interval;
         
-        private OverlappingNodeIterator(Node root, T t) {
+        private OverlappingNodeIterator(Node root, Interval t) {
             interval = t;
             next = root.minimumOverlappingNode(interval);
         }

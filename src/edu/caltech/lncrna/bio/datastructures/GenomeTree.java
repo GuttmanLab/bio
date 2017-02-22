@@ -78,4 +78,14 @@ public class GenomeTree<T extends Annotated> {
             return tree.overlappers(a);
         }
     }
+    
+    public int getNumOverlappers(Annotated a) {
+        Iterator<T> overlappers = getOverlappers(a);
+        int count = 0;
+        while (overlappers.hasNext()) {
+            overlappers.next();
+            count++;
+        }
+        return count;
+    }
 }

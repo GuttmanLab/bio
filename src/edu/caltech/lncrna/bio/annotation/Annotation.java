@@ -106,6 +106,36 @@ public abstract class Annotation implements Annotated {
     }
     
     @Override
+    public int getReadPositionFromReferencePosition(int referencePosition) {
+        switch (strand) {
+        case POSITIVE:
+            // fallthrough: treat BOTH and POSITIVE the same
+        case BOTH:
+            return referencePosition - start;
+        case NEGATIVE:
+            return end - referencePosition;
+        default:
+            throw new IllegalArgumentException("Read coordinates not defined " +
+                    "for strand: " + strand.toString());         
+        }
+    }
+    
+    @Override
+    public int getReferencePositionFromReadPosition(int readPosition) {
+        switch (strand) {
+        case POSITIVE:
+            // fallthrough: treat BOTH and POSITIVE the same
+        case BOTH:
+            return readPosition + start;
+        case NEGATIVE:
+            return end - readPosition;
+        default:
+            throw new IllegalArgumentException("Read coordinates not defined " +
+                    "for strand: " + strand.toString());
+        }
+    }
+    
+    @Override
     public boolean overlaps(Annotated other) {
         return intersect(other).isPresent();
     }
@@ -188,7 +218,7 @@ public abstract class Annotation implements Annotated {
                 : Optional.of((new BlockedAnnotation.BlockedBuilder()).addBlocks(blocks).build());
     }
     
-    private int[] merge(Annotated other, BiFunction<Boolean, Boolean, Boolean> op) {
+    protected int[] merge(Annotated other, BiFunction<Boolean, Boolean, Boolean> op) {
         
         // Flatten the annotations and add a sentinel value at the end
         int[] thisEndpoints = new int[getNumberOfBlocks() * 2 + 1];

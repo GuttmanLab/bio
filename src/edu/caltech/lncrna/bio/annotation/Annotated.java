@@ -157,4 +157,8 @@ public interface Annotated extends Interval {
      * @param absolutePosition - the reference coordinate.
      */
     public int getPositionRelativeToFivePrime(int absolutePosition);
+    
+    public int getReadPositionFromReferencePosition(int referencePosition);
+    
+    public int getReferencePositionFromReadPosition(int readPosition);
 }

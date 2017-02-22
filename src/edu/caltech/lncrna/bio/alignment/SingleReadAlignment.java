@@ -118,6 +118,16 @@ public final class SingleReadAlignment extends SamRecordImpl implements Alignmen
         return annot.getPositionRelativeToFivePrime(absolutePosition);
     }
     
+    @Override
+    public int getReadPositionFromReferencePosition(int referencePosition) {
+        return annot.getReadPositionFromReferencePosition(referencePosition);
+    }
+
+    @Override
+    public int getReferencePositionFromReadPosition(int readPosition) {
+        return annot.getReferencePositionFromReadPosition(readPosition);
+    }
+    
     public String getCigarString() {
         return samRecord.getCigarString();
     }

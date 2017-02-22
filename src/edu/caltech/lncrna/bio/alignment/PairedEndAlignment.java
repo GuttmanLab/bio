@@ -18,6 +18,7 @@ public final class PairedEndAlignment implements PairedSamRecord, Alignment {
     private final SingleReadAlignment read1;
     private final SingleReadAlignment read2;
     private final Annotated annot;
+    private final PairOrientation pairOrientation;
 
     /**
      * Constructs an instance of this class from two <code>SingleReadAlignment</code>s.
@@ -57,10 +58,8 @@ public final class PairedEndAlignment implements PairedSamRecord, Alignment {
         int start = Math.min(read1.getStart(), read2.getStart());
         int end = Math.max(read1.getEnd(), read2.getEnd());
         
-        Strand strand1 = read1.getStrand();
-        Strand strand2 = read2.getStrand();
-        Strand strand = strand1.equals(strand2) ? strand1 : Strand.BOTH;
-        
+        pairOrientation = PairOrientation.getPairOrientation(read1, read2);
+        Strand strand = pairOrientation.getStrand();
         annot = new Block(ref1, start, end, strand);
     }
     
@@ -152,6 +151,16 @@ public final class PairedEndAlignment implements PairedSamRecord, Alignment {
     @Override
     public int getPositionRelativeToFivePrime(int absolutePosition) {
         return annot.getPositionRelativeToFivePrime(absolutePosition);
+    }
+    
+    @Override
+    public int getReadPositionFromReferencePosition(int referencePosition) {
+        return annot.getReadPositionFromReferencePosition(referencePosition);
+    }
+
+    @Override
+    public int getReferencePositionFromReadPosition(int readPosition) {
+        return annot.getReferencePositionFromReadPosition(readPosition);
     }
 
     @Override
