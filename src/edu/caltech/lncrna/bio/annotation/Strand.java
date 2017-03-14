@@ -6,10 +6,12 @@ package edu.caltech.lncrna.bio.annotation;
 public enum Strand {
 
     POSITIVE('+') {
+        @Override
         public Strand reverse() {
             return NEGATIVE;
         }
         
+        @Override
         public Strand intersect(Strand other) {
             if (other == null) {
                 return Strand.INVALID;
@@ -26,14 +28,21 @@ public enum Strand {
             default:
                 return Strand.INVALID;
             }
+        }
+
+        @Override
+        public boolean contains(Strand other) {
+            return this.equals(other);
         }
     },
 
     NEGATIVE('-') {
+        @Override
         public Strand reverse() {
             return POSITIVE;
         }
         
+        @Override
         public Strand intersect(Strand other) {
             if (other == null) {
                 return Strand.INVALID;
@@ -51,13 +60,20 @@ public enum Strand {
                 return Strand.INVALID;
             }
         }
+
+        @Override
+        public boolean contains(Strand other) {
+            return this.equals(other);
+        }
     },
 
     BOTH('.') {
+        @Override
         public Strand reverse() {
             return BOTH;
         }
         
+        @Override
         public Strand intersect(Strand other) {
             if (other == null) {
                 return Strand.INVALID;
@@ -75,15 +91,31 @@ public enum Strand {
                 return Strand.INVALID;
             }
         }
+
+        @Override
+        public boolean contains(Strand other) {
+            if (other == null) {
+                return false;
+            }
+            
+            return !other.equals(Strand.INVALID);
+        }
     },
     
     INVALID('!') {
+        @Override
         public Strand reverse() {
             return INVALID;
         }
         
+        @Override
         public Strand intersect(Strand other) {
             return Strand.INVALID;
+        }
+
+        @Override
+        public boolean contains(Strand other) {
+            return false;
         }
     };
     
@@ -149,4 +181,6 @@ public enum Strand {
      * @param s - the other strand
      */
     public abstract Strand intersect(Strand s);
+    
+    public abstract boolean contains(Strand other);
 }

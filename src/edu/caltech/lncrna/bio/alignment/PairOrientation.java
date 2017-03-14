@@ -84,8 +84,8 @@ public enum PairOrientation {
     
     private static PairOrientation getPairOrientationFromForwardRead1ForwardRead2(
             Annotated read1, Annotated read2) {
-        int firstReadFivePrime = read1.getReferencePositionFromReadPosition(0);
-        int secondReadFivePrime = read2.getReferencePositionFromReadPosition(0);
+        int firstReadFivePrime = read1.getFivePrimePosition();
+        int secondReadFivePrime = read2.getFivePrimePosition();
         return firstReadFivePrime < secondReadFivePrime
                 ? PairOrientation.F1F2
                 : PairOrientation.F2F1;
@@ -93,8 +93,8 @@ public enum PairOrientation {
     
     private static PairOrientation getPairOrientationFromForwardRead1ReverseRead2(
             Annotated read1, Annotated read2) {
-        int firstReadFivePrime = read1.getReferencePositionFromReadPosition(0);
-        int secondReadFivePrime = read2.getReferencePositionFromReadPosition(0);
+        int firstReadFivePrime = read1.getFivePrimePosition();
+        int secondReadFivePrime = read2.getFivePrimePosition();
         return firstReadFivePrime < secondReadFivePrime
                 ? PairOrientation.F1R2
                 : PairOrientation.R2F1;
@@ -102,8 +102,8 @@ public enum PairOrientation {
     
     private static PairOrientation getPairOrientationFromReverseRead1ForwardRead2(
             Annotated read1, Annotated read2) {
-        int firstReadFivePrime = read1.getReferencePositionFromReadPosition(0);
-        int secondReadFivePrime = read2.getReferencePositionFromReadPosition(0);
+        int firstReadFivePrime = read1.getFivePrimePosition();
+        int secondReadFivePrime = read2.getFivePrimePosition();
         return firstReadFivePrime < secondReadFivePrime
                 ? PairOrientation.R1F2
                 : PairOrientation.F2R1;
@@ -111,8 +111,8 @@ public enum PairOrientation {
     
     private static PairOrientation getPairOrientationFromReverseRead1ReverseRead2(
             Annotated read1, Annotated read2) {
-        int firstReadFivePrime = read1.getReferencePositionFromReadPosition(0);
-        int secondReadFivePrime = read2.getReferencePositionFromReadPosition(0);
+        int firstReadFivePrime = read1.getFivePrimePosition();
+        int secondReadFivePrime = read2.getFivePrimePosition();
         return firstReadFivePrime < secondReadFivePrime
                 ? PairOrientation.R1R2
                 : PairOrientation.R2R1;

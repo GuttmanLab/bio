@@ -16,8 +16,8 @@ import edu.caltech.lncrna.bio.annotation.Gene.GeneBuilder;
  */
 public final class BedpeFileRecord implements AnnotationFileRecord {
 
-    private final Block block1;
-    private final Block block2;
+    private final Annotated block1;
+    private final Annotated block2;
     private final String name;
     private final String score;
     private final String[] additionalFields;
@@ -43,7 +43,7 @@ public final class BedpeFileRecord implements AnnotationFileRecord {
      * Gets the first block in the BEDPE record, if it exists, wrapped in an
      * <code>Optional</code>; otherwise an empty <code>Optional</code>.
      */
-    public Optional<Block> getBlock1() {
+    public Optional<Annotated> getBlock1() {
         return Optional.ofNullable(block1);
     }
 
@@ -51,7 +51,7 @@ public final class BedpeFileRecord implements AnnotationFileRecord {
      * Gets the second block in the BEDPE record, if it exists, wrapped in an
      * <code>Optional</code>; otherwise an empty <code>Optional</code>.
      */
-    public Optional<Block> getBlock2() {
+    public Optional<Annotated> getBlock2() {
         return Optional.ofNullable(block2);
     }
     
@@ -271,8 +271,8 @@ public final class BedpeFileRecord implements AnnotationFileRecord {
      */
     public static class BedpeBuilder {
         
-        private Block block1;
-        private Block block2;
+        private Annotated block1;
+        private Annotated block2;
         private String name;
         private String score;
         private List<String> additionalFields;
@@ -281,12 +281,12 @@ public final class BedpeFileRecord implements AnnotationFileRecord {
             additionalFields = new ArrayList<String>();
         }
         
-        public BedpeBuilder addBlock1(Block b) {
+        public BedpeBuilder addBlock1(Annotated b) {
             block1 = b;
             return this;
         }
         
-        public BedpeBuilder addBlock2(Block b) {
+        public BedpeBuilder addBlock2(Annotated b) {
             block2 = b;
             return this;
         }

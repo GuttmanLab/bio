@@ -42,4 +42,26 @@ public class SingleRead extends SamRecordImpl implements Aligned<SingleReadAlign
     public void writeTo(SAMFileWriter writer) {
         writer.addAlignment(samRecord);
     }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        
+        if (!(o instanceof SingleRead)) {
+            return false;
+        }
+        
+        SingleRead other = (SingleRead) o;
+        
+        return samRecord.equals(other.samRecord);
+    }
+    
+    @Override
+    public int hashCode() {
+        int hashCode = 17;
+        hashCode = 37 * hashCode + samRecord.hashCode();
+        return hashCode;
+    }
 }

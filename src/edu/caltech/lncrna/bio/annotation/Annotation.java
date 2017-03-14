@@ -1,11 +1,15 @@
 package edu.caltech.lncrna.bio.annotation;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.stream.Stream;
+
+import edu.caltech.lncrna.bio.annotation.BlockedAnnotation.BlockedBuilder;
 
 public abstract class Annotation implements Annotated {
     
@@ -82,56 +86,78 @@ public abstract class Annotation implements Annotated {
     
     @Override
     public int getSize() {
-        return end - start;
+        if (getNumberOfBlocks() == 1) {
+            return getSpan();
+        }
+        
+        return getBlockStream().mapToInt(x -> x.getSpan()).sum();
     }
     
     @Override
     public int getSpan() {
-        return getSize();
+        return end - start;
     }
     
     @Override
-    public int getPositionRelativeToFivePrime(int absolutePosition) {
-        switch (strand) {
+    public int getFivePrimePosition() {
+        switch (getStrand()) {
         case POSITIVE:
-            // fallthrough: treat BOTH and POSITIVE the same
-        case BOTH:
-            return absolutePosition - start;
+            return getStart();
         case NEGATIVE:
-            return end - absolutePosition - 1; // -1 because of half-open interval
+            return getEnd();
         default:
-            throw new IllegalArgumentException("5' not defined for an annotation " +
-                    "with orientation: " + strand.toString());
+            throw new IllegalArgumentException("5'-position is not defined " +
+                    "for strand " + getStrand().toString());
         }
     }
     
     @Override
-    public int getReadPositionFromReferencePosition(int referencePosition) {
-        switch (strand) {
+    public int getThreePrimePosition() {
+        switch (getStrand()) {
         case POSITIVE:
-            // fallthrough: treat BOTH and POSITIVE the same
-        case BOTH:
-            return referencePosition - start;
+            return getEnd();
         case NEGATIVE:
-            return end - referencePosition;
+            return getStart();
         default:
-            throw new IllegalArgumentException("Read coordinates not defined " +
-                    "for strand: " + strand.toString());         
+            throw new IllegalArgumentException("3'-position is not defined " +
+                    "for strand " + getStrand().toString());
         }
     }
     
     @Override
-    public int getReferencePositionFromReadPosition(int readPosition) {
-        switch (strand) {
-        case POSITIVE:
-            // fallthrough: treat BOTH and POSITIVE the same
-        case BOTH:
-            return readPosition + start;
-        case NEGATIVE:
-            return end - readPosition;
-        default:
-            throw new IllegalArgumentException("Read coordinates not defined " +
-                    "for strand: " + strand.toString());
+    public Iterator<Annotated> iterator() {
+        return getBlockIterator();
+    }
+    
+    @Override
+    public Optional<Annotated> getIntrons() {
+        
+        if (getNumberOfBlocks() == 1) {
+            return Optional.empty();
+        } else {
+            return getBody().minus(this);
+        }
+    }
+    
+    @Override
+    public Iterator<Annotated> getIntronIterator() {
+        Optional<Annotated> introns = getIntrons();
+        
+        if (introns.isPresent()) {
+            return introns.get().getBlockIterator();
+        } else {
+            return Collections.emptyIterator();
+        }
+    }
+    
+    @Override
+    public Stream<Annotated> getIntronStream() {
+        Optional<Annotated> introns = getIntrons();
+        
+        if (introns.isPresent()) {
+            return introns.get().getBlockStream();
+        } else {
+            return Stream.empty();
         }
     }
     
@@ -172,6 +198,10 @@ public abstract class Annotation implements Annotated {
     
     @Override
     public boolean contains(Annotated other) {
+        if (!strand.contains(other.getStrand())) {
+            return false; 
+        }
+        
         if (getNumberOfBlocks() == 1) {
             return ref.equals(other.getReferenceName()) &&
                    start <= other.getStart() &&
@@ -201,7 +231,7 @@ public abstract class Annotation implements Annotated {
     
     private Optional<Annotated> mergeAnnotations(Annotated other,
             BiFunction<Boolean, Boolean, Boolean> op) {
-        List<Block> blocks = new ArrayList<>();
+        List<Annotated> blocks = new ArrayList<>();
 
         int[] flattened = merge(other, op);
         for (int i = 0; i < flattened.length; i += 2) {
@@ -209,13 +239,14 @@ public abstract class Annotation implements Annotated {
                     flattened[i + 1], strand.intersect(other.getStrand())));
         }
     
-        if (blocks.isEmpty()) {
+        switch (blocks.size()) {
+        case 0:
             return Optional.empty();
+        case 1:
+            return Optional.of(blocks.get(0));
+        default:
+            return Optional.of((new BlockedBuilder()).addBlocks(blocks).build());
         }
-    
-        return blocks.isEmpty()
-                ? Optional.empty()
-                : Optional.of((new BlockedAnnotation.BlockedBuilder()).addBlocks(blocks).build());
     }
     
     protected int[] merge(Annotated other, BiFunction<Boolean, Boolean, Boolean> op) {
@@ -223,9 +254,9 @@ public abstract class Annotation implements Annotated {
         // Flatten the annotations and add a sentinel value at the end
         int[] thisEndpoints = new int[getNumberOfBlocks() * 2 + 1];
         int idx = 0;
-        Iterator<Block> blocks = getBlockIterator();
+        Iterator<Annotated> blocks = getBlockIterator();
         while (blocks.hasNext()) {
-            Block block = blocks.next();
+            Annotated block = blocks.next();
             thisEndpoints[idx++] = block.getStart();
             thisEndpoints[idx++] = block.getEnd();
         }
@@ -234,7 +265,7 @@ public abstract class Annotation implements Annotated {
         idx = 0;
         blocks = other.getBlockIterator();
         while (blocks.hasNext()) {
-            Block block = blocks.next();
+            Annotated block = blocks.next();
             otherEndpoints[idx++] = block.getStart();
             otherEndpoints[idx++] = block.getEnd();
         }
@@ -268,6 +299,17 @@ public abstract class Annotation implements Annotated {
         }
 
         return rtrnEndpoints.stream().mapToInt(i -> i).toArray();
+    }
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(ref + ":");
+        for (Annotated block : this) {
+            sb.append("[" + block.getStart() + "-" + block.getEnd() + "]");
+        }
+        sb.append("(" + strand.toString() + ")");
+        return sb.toString();
     }
 
     public abstract static class AnnotationBuilder {

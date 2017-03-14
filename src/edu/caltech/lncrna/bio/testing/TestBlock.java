@@ -17,15 +17,6 @@ import edu.caltech.lncrna.bio.annotation.BlockedAnnotation.BlockedBuilder;
 import edu.caltech.lncrna.bio.annotation.Strand;
 
 public class TestBlock {
-
-    private static final String REF1 = "chr1";
-    private static final int START1 = 0;
-    private static final int END1 = 20;
-    private static final Strand STRAND1 = Strand.POSITIVE;
-    private static final int LENGTH1 = 20;
-
-    private static final Block BLOCK1 = new Block(REF1, START1, END1, STRAND1);
-    private static final Block BLOCK1_COPY = new Block(REF1, START1, END1, STRAND1);
     
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -67,6 +58,30 @@ public class TestBlock {
     }
     
     @Test
+    public void testBlockConstructorFailsWithInvalidBlock() {
+        thrown.expect(NullPointerException.class);
+        new Block(null);
+    }
+    
+    @Test
+    public void testBlockConstructorWithValidBlock() {
+        Annotated b1 = new Block("chr1", 10, 20, Strand.BOTH);
+        Annotated b2 = new Block(b1);
+        assertThat(b2, is(b1));
+    }
+    
+    @Test
+    public void testBlockConstructorWithValidBlockedAnnotation() {
+        Annotated oldAnnotation = (new BlockedBuilder())
+                .addBlock(new Block("chr1", 10, 20, Strand.BOTH))
+                .addBlock(new Block("chr1", 30, 40, Strand.BOTH))
+                .build();
+        Annotated newBlock = new Block(oldAnnotation);
+        Annotated cmpBlock = new Block("chr1", 10, 40, Strand.BOTH);
+        assertThat(newBlock, is(cmpBlock));
+    }
+    
+    @Test
     public void testNewStrandConstructorFailsWithNullAnnotation() {
         thrown.expect(NullPointerException.class);
         new Block(null, Strand.BOTH);
@@ -80,7 +95,7 @@ public class TestBlock {
     
     @Test
     public void testNewStrandConstructor() {
-        Block b = new Block(new Block("chr1", 10, 20, Strand.POSITIVE), Strand.NEGATIVE);
+        Annotated b = new Block(new Block("chr1", 10, 20, Strand.POSITIVE), Strand.NEGATIVE);
         assertThat(b.getReferenceName(), is("chr1"));
         assertThat(b.getStart(), is(10));
         assertThat(b.getEnd(), is(20));
@@ -89,227 +104,184 @@ public class TestBlock {
     
     @Test
     public void testBlockGetReferenceName() {
-        assertThat(BLOCK1.getReferenceName(), is(REF1));
+        Annotated b = new Block("chr1", 10, 20, Strand.POSITIVE);
+        assertThat(b.getReferenceName(), is("chr1"));
     }
     
     @Test
     public void testBlockGetStart() {
-        assertThat(BLOCK1.getStart(), is(START1));
+        Annotated b = new Block("chr1", 10, 20, Strand.POSITIVE);
+        assertThat(b.getStart(), is(10));
     }
     
     @Test
     public void testBlockGetEnd() {
-        assertThat(BLOCK1.getEnd(), is(END1));
+        Annotated b = new Block("chr1", 10, 20, Strand.POSITIVE);
+        assertThat(b.getEnd(), is(20));
     }
     
     @Test
     public void testBlockGetStrand() {
-        assertThat(BLOCK1.getStrand(), is(STRAND1));
+        Annotated b = new Block("chr1", 10, 20, Strand.POSITIVE);
+        assertThat(b.getStrand(), is(Strand.POSITIVE));
     }
     
     @Test
     public void testBlockGetSize() {
-        assertThat(BLOCK1.getSize(), is(LENGTH1));
+        Annotated b = new Block("chr1", 10, 20, Strand.POSITIVE);
+        assertThat(b.getSize(), is(10));
     }
     
     @Test
     public void testBlockGetSpan() {
-        assertThat(BLOCK1.getSpan(), is(LENGTH1));
+        Annotated b = new Block("chr1", 10, 20, Strand.POSITIVE);
+        assertThat(b.getSpan(), is(10));
     }
     
     @Test
     public void testBlockEqualObjectCopy() {
-        assertThat(BLOCK1 == BLOCK1_COPY, is(false));
+        Annotated b1 = new Block("chr1", 10, 20, Strand.POSITIVE);
+        Annotated b2 = new Block("chr1", 10, 20, Strand.POSITIVE);
+        assertThat(b1 == b2, is(false));
     }
     
     @Test
     public void testBlockEqualIdentity() {
-        assertThat(BLOCK1, is(BLOCK1));
+        Annotated b = new Block("chr1", 10, 20, Strand.POSITIVE);
+        assertThat(b, is(b));
     }
     
     @Test
     public void testBlockEqualCopy() {
-        assertThat(BLOCK1, is(BLOCK1_COPY));
+        Annotated b1 = new Block("chr1", 10, 20, Strand.POSITIVE);
+        Annotated b2 = new Block("chr1", 10, 20, Strand.POSITIVE);
+        assertThat(b1, is(b2));
     }
     
     @Test
-    public void testDoesNotOverlapNull() {
-        Block block = new Block("chr2", 100, 200, Strand.POSITIVE);
-        assertThat(block.overlaps(null), is(false));
+    public void testBlockNotEqualNonBlock() {
+        Annotated b1 = new Block("chr1", 10, 20, Strand.POSITIVE);
+        Annotated b2 = (new BlockedBuilder())
+                .addBlock(new Block("chr1", 10, 20, Strand.POSITIVE))
+                .build();
+        assertThat(b1.equals(b2), is(false));
     }
     
     @Test
-    public void testOverlapsItself() {
-        Block block = new Block("chr2", 100, 200, Strand.POSITIVE);
-        assertThat(block.overlaps(block), is(true));
+    public void testBlockNotEqualsDifferentChromosomes() {
+        Annotated b1 = new Block("chr1", 10, 20, Strand.POSITIVE);
+        Annotated b2 = new Block("chr2", 10, 20, Strand.POSITIVE);
+        assertThat(b1.equals(b2), is(false));
     }
     
     @Test
-    public void testOverlapsAnother() {
-        Block b1 = new Block("chr2", 100, 200, Strand.POSITIVE);
-        Block b2 = new Block("chr2", 150, 250, Strand.POSITIVE);
-        assertThat(b1.overlaps(b2), is(true));
+    public void testBlockNotEqualsDifferentStart() {
+        Annotated b1 = new Block("chr1", 10, 20, Strand.POSITIVE);
+        Annotated b2 = new Block("chr1", 11, 20, Strand.POSITIVE);
+        assertThat(b1.equals(b2), is(false));
     }
     
     @Test
-    public void testDoesNotOverlapComplement() {
-        Block b1 = new Block("chr2", 100, 200, Strand.POSITIVE);
-        Block b2 = new Block("chr2", 100, 200, Strand.NEGATIVE);
-        assertThat(b1.overlaps(b2), is(false));
+    public void testBlockNotEqualsDifferentEnd() {
+        Annotated b1 = new Block("chr1", 10, 20, Strand.POSITIVE);
+        Annotated b2 = new Block("chr1", 10, 21, Strand.POSITIVE);
+        assertThat(b1.equals(b2), is(false));
     }
     
     @Test
-    public void testOverlapsBlockWithBothStrands() {
-        Block b1 = new Block("chr2", 100, 200, Strand.POSITIVE);
-        Block b2 = new Block("chr2", 100, 200, Strand.BOTH);
-        assertThat(b1.overlaps(b2), is(true));
+    public void testBlockNotEqualsDifferentStrand() {
+        Annotated b1 = new Block("chr1", 10, 20, Strand.POSITIVE);
+        Annotated b2 = new Block("chr1", 10, 20, Strand.NEGATIVE);
+        assertThat(b1.equals(b2), is(false));
     }
     
     @Test
-    public void testDoesNotOverlapDifferentReference() {
-        Block b1 = new Block("chr2", 100, 200, Strand.POSITIVE);
-        Block b2 = new Block("chr3", 100, 200, Strand.POSITIVE);
-        assertThat(b1.overlaps(b2), is(false));
+    public void testBlockGetBody() {
+        Annotated b = new Block("chr1", 10, 20, Strand.POSITIVE);
+        assertThat(b.getBody(), is(b));
     }
     
     @Test
-    public void testDoesNotOverlapAdjacentBlocks() {
-        Block b1 = new Block("chr2", 100, 200, Strand.POSITIVE);
-        Block b2 = new Block("chr2", 0, 100, Strand.POSITIVE);
-        Block b3 = new Block("chr2", 200, 300, Strand.POSITIVE);
-        assertThat(b1.overlaps(b2), is(false));
-        assertThat(b1.overlaps(b3), is(false));
+    public void testGetFivePrimePositionPositveStrand() {
+        Annotated b = new Block("chr1", 10, 20, Strand.POSITIVE);
+        assertThat(b.getFivePrimePosition(), is(10));
     }
     
     @Test
-    public void testDoesNotIntersectNull() {
-        Block block = new Block("chr2", 100, 200, Strand.POSITIVE);
-        assertThat(block.intersect(null).isPresent(), is(false));
+    public void testGetThreePrimePositionPositveStrand() {
+        Annotated b = new Block("chr1", 10, 20, Strand.POSITIVE);
+        assertThat(b.getThreePrimePosition(), is(20));
     }
     
     @Test
-    public void testIntersectsItself() {
-        Block block = new Block("chr2", 100, 200, Strand.POSITIVE);
-        assertThat(block.intersect(block).get(), is(block));
+    public void testGetFivePrimePositionNegativeStrand() {
+        Annotated b = new Block("chr1", 10, 20, Strand.NEGATIVE);
+        assertThat(b.getFivePrimePosition(), is(20));
     }
     
     @Test
-    public void testIntersectsAnother() {
-        Block b1 = new Block("chr2", 100, 200, Strand.POSITIVE);
-        Block b2 = new Block("chr2", 150, 250, Strand.POSITIVE);
-        Block intersection = new Block("chr2", 150, 200, Strand.POSITIVE);
-        assertThat(b1.intersect(b2).get(), is(intersection));
+    public void testGetThreePrimePositionNegativeStrand() {
+        Annotated b = new Block("chr1", 10, 20, Strand.NEGATIVE);
+        assertThat(b.getThreePrimePosition(), is(10));
     }
     
     @Test
-    public void testDoesNotIntersectComplement() {
-        Block b1 = new Block("chr2", 100, 200, Strand.POSITIVE);
-        Block b2 = new Block("chr2", 100, 200, Strand.NEGATIVE);
-        assertThat(b1.intersect(b2).isPresent(), is(false));
+    public void testGetFivePrimePositionBothStrand() {
+        thrown.expect(IllegalArgumentException.class);
+        (new Block("chr1", 10, 20, Strand.BOTH)).getFivePrimePosition();
     }
     
     @Test
-    public void testIntersectsBlockWithBothStrands() {
-        Block b1 = new Block("chr2", 100, 200, Strand.POSITIVE);
-        Block b2 = new Block("chr2", 100, 200, Strand.BOTH);
-        assertThat(b1.intersect(b2).get(), is(b1));
+    public void testGetThreePrimePositionBothStrand() {
+        thrown.expect(IllegalArgumentException.class);
+        (new Block("chr1", 10, 20, Strand.BOTH)).getThreePrimePosition();
     }
     
     @Test
-    public void testDoesNotIntersectDifferentReference() {
-        Block b1 = new Block("chr2", 100, 200, Strand.POSITIVE);
-        Block b2 = new Block("chr3", 100, 200, Strand.POSITIVE);
-        assertThat(b1.intersect(b2).isPresent(), is(false));
+    public void testBlockGetIntrons() {
+        Annotated b = new Block("chr1", 10, 20, Strand.POSITIVE);
+        assertThat(b.getIntrons(), is(Optional.empty()));
     }
     
     @Test
-    public void testDoesNotIntersectAdjacentBlocks() {
-        Block b1 = new Block("chr2", 100, 200, Strand.POSITIVE);
-        Block b2 = new Block("chr2", 0, 100, Strand.POSITIVE);
-        Block b3 = new Block("chr2", 200, 300, Strand.POSITIVE);
-        assertThat(b1.intersect(b2).isPresent(), is(false));
-        assertThat(b1.intersect(b3).isPresent(), is(false));
+    public void testBlockGetIntronIterator() {
+        Annotated b = new Block("chr1", 10, 20, Strand.POSITIVE);
+        assertThat(b.getIntronIterator().hasNext(), is(false));
     }
+    
+    @Test
+    public void testBlockGetIntronStream() {
+        Annotated b = new Block("chr1", 10, 20, Strand.POSITIVE);
+        assertThat(b.getIntronStream().count(), is(0L));
+    }
+    
+
     
     @Test
     public void testGetBlockIterator() {
-        Block b = new Block("chr1", 100, 200, Strand.POSITIVE);
-        Iterator<Block> iter = b.getBlockIterator();
+        Annotated b = new Block("chr1", 100, 200, Strand.POSITIVE);
+        Iterator<Annotated> iter = b.getBlockIterator();
         assertThat(iter.hasNext(), is(true));
-        Block nextBlock = iter.next();
+        Annotated nextBlock = iter.next();
         assertThat(nextBlock, is(b));
         assertThat(iter.hasNext(), is(false));
     }
     
     @Test
     public void testGetBlockStream() {
-        Block b = new Block("chr1", 100, 200, Strand.POSITIVE);
-        Stream<Block> stream = b.getBlockStream();
+        Annotated b = new Block("chr1", 100, 200, Strand.POSITIVE);
+        Stream<Annotated> stream = b.getBlockStream();
         assertThat(stream.count(), is(1L));
         stream = b.getBlockStream();
         assertThat(stream.findFirst().get(), is(b));
     }
 
-    @Test
-    public void testBlockContainsSelf() {
-        Block b= new Block("chr1", 100, 200, Strand.POSITIVE);
-       assertThat(b.contains(b), is(true));
-    }
-    
-    @Test
-    public void testBlockContainsBlock() {
-        Block big = new Block("chr1", 100, 200, Strand.POSITIVE);
-        Block small = new Block("chr1", 125, 175, Strand.POSITIVE);
-        assertThat(big.contains(small), is(true));
-    }
-    
-    @Test
-    public void testBlockDoesNotContainDifferentChromosomeBlock() {
-        Block big = new Block("chr1", 100, 200, Strand.POSITIVE);
-        Block small = new Block("chr2", 125, 175, Strand.POSITIVE);
-        assertThat(big.contains(small), is(false));
-    }
-    
-    @Test
-    public void testBlockDoesNotContainOverlappingEdgeBlock() {
-        Block big = new Block("chr1", 100, 200, Strand.POSITIVE);
-        Block small = new Block("chr1", 50, 150, Strand.POSITIVE);
-        assertThat(big.overlaps(small), is(true));
-        assertThat(big.contains(small), is(false));
-    }
-    
-    @Test
-    public void testBlockDoesNotContainNonOverlappingBlock() {
-        Block big = new Block("chr1", 100, 200, Strand.POSITIVE);
-        Block small = new Block("chr1", 0, 50, Strand.POSITIVE);
-        assertThat(big.overlaps(small), is(false));
-        assertThat(big.contains(small), is(false));
-    }
-    
-    @Test
-    public void testBlockContainsBlockedAnnotation() {
-        Block big = new Block("chr1", 100, 200, Strand.POSITIVE);
-        Annotated small = (new BlockedBuilder())
-                .addBlock(new Block("chr1", 100, 120, Strand.POSITIVE))
-                .addBlock(new Block("chr1", 150, 175, Strand.POSITIVE))
-                .build();
-        assertThat(big.contains(small), is(true));
-    }
-    
-    @Test
-    public void testBlockDoesNotContainOverlappingBlockedAnnotation() {
-        Block big = new Block("chr1", 100, 200, Strand.POSITIVE);
-        Annotated small = (new BlockedBuilder())
-                .addBlock(new Block("chr1", 95, 120, Strand.POSITIVE))
-                .addBlock(new Block("chr1", 150, 175, Strand.POSITIVE))
-                .build();
-        assertThat(big.contains(small), is(false));
-    }
+
     
     @Test
     public void testMinusWithNoOverlapSameStrandSameChromosome() {
-        Block block1 = new Block("chr1", 100, 200, Strand.POSITIVE);
-        Block block2 = new Block("chr1", 50, 100, Strand.POSITIVE);
+        Annotated block1 = new Block("chr1", 100, 200, Strand.POSITIVE);
+        Annotated block2 = new Block("chr1", 50, 100, Strand.POSITIVE);
         Annotated diffBlock = block1.minus(block2)
                                     .orElseThrow(() -> new IllegalArgumentException("No diff present"));
         assertThat(diffBlock.getNumberOfBlocks(), is(1));
@@ -321,8 +293,8 @@ public class TestBlock {
     
     @Test
     public void testMinusWithNoOverlapSameStrandDifferentChromosome() {
-        Block block1 = new Block("chr1", 100, 200, Strand.POSITIVE);
-        Block block2 = new Block("chr2", 100, 200, Strand.POSITIVE);
+        Annotated block1 = new Block("chr1", 100, 200, Strand.POSITIVE);
+        Annotated block2 = new Block("chr2", 100, 200, Strand.POSITIVE);
         Annotated diffBlock = block1.minus(block2)
                                     .orElseThrow(() -> new IllegalArgumentException("No diff present"));
         assertThat(diffBlock.getNumberOfBlocks(), is(1));
@@ -334,8 +306,8 @@ public class TestBlock {
     
     @Test
     public void testMinusWithNoOverlapDifferentStrandSameChromosome() {
-        Block block1 = new Block("chr1", 100, 200, Strand.POSITIVE);
-        Block block2 = new Block("chr2", 100, 200, Strand.NEGATIVE);
+        Annotated block1 = new Block("chr1", 100, 200, Strand.POSITIVE);
+        Annotated block2 = new Block("chr2", 100, 200, Strand.NEGATIVE);
         Annotated diffBlock = block1.minus(block2)
                                     .orElseThrow(() -> new IllegalArgumentException("No diff present"));
         assertThat(diffBlock.getNumberOfBlocks(), is(1));
@@ -347,40 +319,40 @@ public class TestBlock {
     
     @Test
     public void testMinusCompleteRemoval() {
-        Block block1 = new Block("chr1", 100, 200, Strand.POSITIVE);
-        Block block2 = new Block("chr1", 100, 200, Strand.POSITIVE);
+        Annotated block1 = new Block("chr1", 100, 200, Strand.POSITIVE);
+        Annotated block2 = new Block("chr1", 100, 200, Strand.POSITIVE);
         Optional<Annotated> diffBlock = block1.minus(block2);
         assertThat(diffBlock.isPresent(), is(false));
     }
     
     @Test
     public void testMinusCompleteRemovalNegativeMinusBoth() {
-        Block block1 = new Block("chr1", 100, 200, Strand.NEGATIVE);
-        Block block2 = new Block("chr1", 100, 200, Strand.BOTH);
+        Annotated block1 = new Block("chr1", 100, 200, Strand.NEGATIVE);
+        Annotated block2 = new Block("chr1", 100, 200, Strand.BOTH);
         Optional<Annotated> diffBlock = block1.minus(block2);
         assertThat(diffBlock.isPresent(), is(false));
     }
     
     @Test
     public void testMinusCompleteRemovalPositiveMinusBoth() {
-        Block block1 = new Block("chr1", 100, 200, Strand.POSITIVE);
-        Block block2 = new Block("chr1", 100, 200, Strand.BOTH);
+        Annotated block1 = new Block("chr1", 100, 200, Strand.POSITIVE);
+        Annotated block2 = new Block("chr1", 100, 200, Strand.BOTH);
         Optional<Annotated> diffBlock = block1.minus(block2);
         assertThat(diffBlock.isPresent(), is(false));
     }
     
     @Test
     public void testMinusCompleteRemovalBothMinusNegative() {
-        Block block1 = new Block("chr1", 100, 200, Strand.BOTH);
-        Block block2 = new Block("chr1", 100, 200, Strand.NEGATIVE);
+        Annotated block1 = new Block("chr1", 100, 200, Strand.BOTH);
+        Annotated block2 = new Block("chr1", 100, 200, Strand.NEGATIVE);
         Optional<Annotated> diffBlock = block1.minus(block2);
         assertThat(diffBlock.isPresent(), is(false));
     }
     
     @Test
     public void testMinusRemovalFromEndSameStrand() {
-        Block block1 = new Block("chr1", 100, 200, Strand.POSITIVE);
-        Block block2 = new Block("chr1", 50, 150, Strand.POSITIVE);
+        Annotated block1 = new Block("chr1", 100, 200, Strand.POSITIVE);
+        Annotated block2 = new Block("chr1", 50, 150, Strand.POSITIVE);
         Annotated diffBlock = block1.minus(block2)
                                     .orElseThrow(() -> new IllegalArgumentException("No diff present"));
         assertThat(diffBlock.getNumberOfBlocks(), is(1));
@@ -392,8 +364,8 @@ public class TestBlock {
     
     @Test
     public void testMinusRemovalFromEndNegativeMinusBoth() {
-        Block block1 = new Block("chr1", 100, 200, Strand.NEGATIVE);
-        Block block2 = new Block("chr1", 50, 150, Strand.BOTH);
+        Annotated block1 = new Block("chr1", 100, 200, Strand.NEGATIVE);
+        Annotated block2 = new Block("chr1", 50, 150, Strand.BOTH);
         Annotated diffBlock = block1.minus(block2)
                                     .orElseThrow(() -> new IllegalArgumentException("No diff present"));
         assertThat(diffBlock.getNumberOfBlocks(), is(1));
@@ -405,8 +377,8 @@ public class TestBlock {
     
     @Test
     public void testMinusRemovalFromEndBothMinusNegative() {
-        Block block1 = new Block("chr1", 100, 200, Strand.BOTH);
-        Block block2 = new Block("chr1", 50, 150, Strand.NEGATIVE);
+        Annotated block1 = new Block("chr1", 100, 200, Strand.BOTH);
+        Annotated block2 = new Block("chr1", 50, 150, Strand.NEGATIVE);
         Annotated diffBlock = block1.minus(block2)
                                     .orElseThrow(() -> new IllegalArgumentException("No diff present"));
         assertThat(diffBlock.getNumberOfBlocks(), is(1));
@@ -418,8 +390,8 @@ public class TestBlock {
     
     @Test
     public void testMinusRemovalFromMiddleSameStrand() {
-        Block block1 = new Block("chr1", 100, 400, Strand.POSITIVE);
-        Block block2 = new Block("chr1", 200, 300, Strand.POSITIVE);
+        Annotated block1 = new Block("chr1", 100, 400, Strand.POSITIVE);
+        Annotated block2 = new Block("chr1", 200, 300, Strand.POSITIVE);
         Annotated diffBlock = block1.minus(block2)
                                     .orElseThrow(() -> new IllegalArgumentException("No diff present"));
         assertThat(diffBlock.getNumberOfBlocks(), is(2));
@@ -427,13 +399,13 @@ public class TestBlock {
         assertThat(diffBlock.getEnd(), is(400));
         assertThat(diffBlock.getStrand(), is(Strand.POSITIVE));
         assertThat(diffBlock.getReferenceName(), is("chr1"));
-        Iterator<Block> blockIter = diffBlock.getBlockIterator();
-        Block firstBlock = blockIter.next();
+        Iterator<Annotated> blockIter = diffBlock.getBlockIterator();
+        Annotated firstBlock = blockIter.next();
         assertThat(firstBlock.getStart(), is(100));
         assertThat(firstBlock.getEnd(), is(200));
         assertThat(firstBlock.getReferenceName(), is("chr1"));
         assertThat(firstBlock.getStrand(), is(Strand.POSITIVE));
-        Block secondBlock = blockIter.next();
+        Annotated secondBlock = blockIter.next();
         assertThat(secondBlock.getStart(), is(300));
         assertThat(secondBlock.getEnd(), is(400));
         assertThat(secondBlock.getReferenceName(), is("chr1"));
@@ -442,8 +414,8 @@ public class TestBlock {
     
     @Test
     public void testMinusRemovalFromMiddleNegativeMinusBoth() {
-        Block block1 = new Block("chr1", 100, 400, Strand.NEGATIVE);
-        Block block2 = new Block("chr1", 200, 300, Strand.BOTH);
+        Annotated block1 = new Block("chr1", 100, 400, Strand.NEGATIVE);
+        Annotated block2 = new Block("chr1", 200, 300, Strand.BOTH);
         Annotated diffBlock = block1.minus(block2)
                                     .orElseThrow(() -> new IllegalArgumentException("No diff present"));
         assertThat(diffBlock.getNumberOfBlocks(), is(2));
@@ -451,13 +423,13 @@ public class TestBlock {
         assertThat(diffBlock.getEnd(), is(400));
         assertThat(diffBlock.getStrand(), is(Strand.NEGATIVE));
         assertThat(diffBlock.getReferenceName(), is("chr1"));
-        Iterator<Block> blockIter = diffBlock.getBlockIterator();
-        Block firstBlock = blockIter.next();
+        Iterator<Annotated> blockIter = diffBlock.getBlockIterator();
+        Annotated firstBlock = blockIter.next();
         assertThat(firstBlock.getStart(), is(100));
         assertThat(firstBlock.getEnd(), is(200));
         assertThat(firstBlock.getReferenceName(), is("chr1"));
         assertThat(firstBlock.getStrand(), is(Strand.NEGATIVE));
-        Block secondBlock = blockIter.next();
+        Annotated secondBlock = blockIter.next();
         assertThat(secondBlock.getStart(), is(300));
         assertThat(secondBlock.getEnd(), is(400));
         assertThat(secondBlock.getReferenceName(), is("chr1"));
@@ -466,8 +438,8 @@ public class TestBlock {
     
     @Test
     public void testMinusRemovalFromMiddleBothMinusNegative() {
-        Block block1 = new Block("chr1", 100, 400, Strand.BOTH);
-        Block block2 = new Block("chr1", 200, 300, Strand.NEGATIVE);
+        Annotated block1 = new Block("chr1", 100, 400, Strand.BOTH);
+        Annotated block2 = new Block("chr1", 200, 300, Strand.NEGATIVE);
         Annotated diffBlock = block1.minus(block2)
                                     .orElseThrow(() -> new IllegalArgumentException("No diff present"));
         assertThat(diffBlock.getNumberOfBlocks(), is(2));
@@ -475,26 +447,40 @@ public class TestBlock {
         assertThat(diffBlock.getEnd(), is(400));
         assertThat(diffBlock.getStrand(), is(Strand.NEGATIVE));
         assertThat(diffBlock.getReferenceName(), is("chr1"));
-        Iterator<Block> blockIter = diffBlock.getBlockIterator();
-        Block firstBlock = blockIter.next();
+        Iterator<Annotated> blockIter = diffBlock.getBlockIterator();
+        Annotated firstBlock = blockIter.next();
         assertThat(firstBlock.getStart(), is(100));
         assertThat(firstBlock.getEnd(), is(200));
         assertThat(firstBlock.getReferenceName(), is("chr1"));
         assertThat(firstBlock.getStrand(), is(Strand.NEGATIVE));
-        Block secondBlock = blockIter.next();
+        Annotated secondBlock = blockIter.next();
         assertThat(secondBlock.getStart(), is(300));
         assertThat(secondBlock.getEnd(), is(400));
         assertThat(secondBlock.getReferenceName(), is("chr1"));
         assertThat(secondBlock.getStrand(), is(Strand.NEGATIVE));
     }
+
+    @Test
+    public void testTileNegativeWindowSize() {
+        thrown.expect(IllegalArgumentException.class);
+        Block b = new Block("chr1", 0, 1000, Strand.POSITIVE);
+        b.tile(-1, 100);
+    }
+    
+    @Test
+    public void testTileNegativeStepSize() {
+        thrown.expect(IllegalArgumentException.class);
+        Block b = new Block("chr1", 0, 1000, Strand.POSITIVE);
+        b.tile(100, -1);
+    }
     
     @Test
     public void testPerfectNonOverlappingTiling() {
         Block bigBlock = new Block("chr1", 0, 1000, Strand.BOTH);
-        Iterator<Block> tiles = bigBlock.tile(100, 100);
+        Iterator<Annotated> tiles = bigBlock.tile(100, 100);
         int numTiles = 10;
         for (int i = 0; i < numTiles; i++) {
-            Block tile = tiles.next();
+            Annotated tile = tiles.next();
             assertThat(tile, is(new Block("chr1", i * 100, (i + 1) * 100, Strand.BOTH)));
         }
         assertThat(tiles.hasNext(), is(false));
@@ -503,10 +489,10 @@ public class TestBlock {
     @Test
     public void testImperfectNonOverlappingTiling() {
         Block bigBlock = new Block("chr1", 0, 1010, Strand.BOTH);
-        Iterator<Block> tiles = bigBlock.tile(100, 100);
+        Iterator<Annotated> tiles = bigBlock.tile(100, 100);
         int numTiles = 10;
         for (int i = 0; i < numTiles; i++) {
-            Block tile = tiles.next();
+            Annotated tile = tiles.next();
             assertThat(tile, is(new Block("chr1", i * 100, (i + 1) * 100, Strand.BOTH)));
         }
         assertThat(tiles.hasNext(), is(false));

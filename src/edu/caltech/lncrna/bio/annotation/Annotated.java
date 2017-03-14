@@ -18,7 +18,7 @@ import edu.caltech.lncrna.bio.datastructures.Interval;
  * <li>an orientation or strandedness</li>
  * </ul>
  */
-public interface Annotated extends Interval {
+public interface Annotated extends Interval, Iterable<Annotated> {
 
     /**
      * Gets the name of the reference that this annotation belongs to.
@@ -76,12 +76,12 @@ public interface Annotated extends Interval {
     /**
      * Gets an <code>Iterator</code> over the blocks making up this annotation.
      */
-    public Iterator<Block> getBlockIterator();
+    public Iterator<Annotated> getBlockIterator();
     
     /**
      * Gets the blocks making up this annotation as a stream.
      */
-    public Stream<Block> getBlockStream();
+    public Stream<Annotated> getBlockStream();
     
     /**
      * Whether this annotation overlaps another annotation.
@@ -105,7 +105,7 @@ public interface Annotated extends Interval {
      * this annotation's exons. In other words, the hull is what one gets by
      * "filling in" all of this annotations introns.
      */
-    public Annotated getHull();
+    public Annotated getBody();
     
     /**
      * Returns the difference between this annotation and another.
@@ -148,17 +148,13 @@ public interface Annotated extends Interval {
      */
     public boolean contains(Annotated other);
     
-    /**
-     * Calculates the given reference coordinate relative to the five-prime
-     * end of this annotation.
-     * <p>
-     * This method considers orientation when determining which end is the
-     * five-prime end.
-     * @param absolutePosition - the reference coordinate.
-     */
-    public int getPositionRelativeToFivePrime(int absolutePosition);
+    public Optional<Annotated> getIntrons();
     
-    public int getReadPositionFromReferencePosition(int referencePosition);
+    public Iterator<Annotated> getIntronIterator();
     
-    public int getReferencePositionFromReadPosition(int readPosition);
+    public Stream<Annotated> getIntronStream();
+    
+    public int getFivePrimePosition();
+    
+    public int getThreePrimePosition();
 }

@@ -7,7 +7,7 @@ import edu.caltech.lncrna.bio.annotation.BedpeFileRecord;
 
 public final class BedpeParser extends TextFileParser<BedpeFileRecord> {
     
-    public BedpeParser(Path p) throws IOException {
+    public BedpeParser(Path p) {
         super(p);
         findNext();
     }

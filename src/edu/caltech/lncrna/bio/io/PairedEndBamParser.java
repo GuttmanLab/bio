@@ -2,10 +2,14 @@ package edu.caltech.lncrna.bio.io;
 
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
+import edu.caltech.lncrna.bio.alignment.PairedEndAlignment;
 import edu.caltech.lncrna.bio.alignment.ReadPair;
 import edu.caltech.lncrna.bio.alignment.SingleRead;
 import edu.caltech.lncrna.bio.annotation.Annotation;
@@ -56,6 +60,18 @@ public class PairedEndBamParser extends BamParser<ReadPair> {
     @Override
     public ReadPair next() {
         return iterator.next();
+    }
+    
+    @Override
+    public Stream<PairedEndAlignment> getAlignmentStream() {
+        return stream().map(x -> x.getAlignment())
+                       .filter(Optional::isPresent)
+                       .map(x -> x.get());
+    }
+    
+    @Override
+    public Iterator<PairedEndAlignment> getAlignmentIterator() {
+        return getAlignmentStream().iterator();
     }
     
     public class PairedEndIterator implements CloseableIterator<ReadPair> {

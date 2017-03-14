@@ -42,7 +42,7 @@ public class Gene extends BlockedAnnotation {
         this.cdsEndPos = cdsEndPos;
     }
     
-    Gene(String ref, String name, int start, int end, int cdsStartPos, int cdsEndPos, Strand strand, List<Block> blocks) {
+    Gene(String ref, String name, int start, int end, int cdsStartPos, int cdsEndPos, Strand strand, List<Annotated> blocks) {
         super(ref, start, end, strand, blocks);
         this.name = name;
         this.cdsStartPos = cdsStartPos;
@@ -77,7 +77,7 @@ public class Gene extends BlockedAnnotation {
             return Optional.empty();
         }
         
-        Block cds = new Block(getReferenceName(), cdsStartPos, cdsEndPos, getStrand());
+        Annotated cds = new Block(getReferenceName(), cdsStartPos, cdsEndPos, getStrand());
         return intersect(cds);
     }
     
@@ -113,7 +113,7 @@ public class Gene extends BlockedAnnotation {
         hashCode = 37 * hashCode + name.hashCode();
         hashCode = 37 * hashCode + cdsStartPos;
         hashCode = 37 * hashCode + cdsEndPos;
-        for (Block b : blocks) {
+        for (Annotated b : blocks) {
             hashCode = 37 * hashCode + b.hashCode();
         }
 
@@ -179,12 +179,12 @@ public class Gene extends BlockedAnnotation {
         }
         
         @Override
-        public GeneBuilder addBlock(Block b) {
+        public GeneBuilder addBlock(Annotated b) {
             return (GeneBuilder) super.addBlock(b);
         }
         
         @Override
-        public GeneBuilder addBlocks(Collection<Block> bs) {
+        public GeneBuilder addBlocks(Collection<Annotated> bs) {
             return (GeneBuilder) super.addBlocks(bs);
         }
      

@@ -11,9 +11,13 @@ public abstract class TextFileParser<T> extends FileParser<T> {
     protected final BufferedReader br;
     protected T next;
     
-    public TextFileParser(Path p) throws IOException {
+    public TextFileParser(Path p) {
         super(p);
-        br = Files.newBufferedReader(p, StandardCharsets.US_ASCII);
+        try {
+            br = Files.newBufferedReader(p, StandardCharsets.US_ASCII);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

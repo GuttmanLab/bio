@@ -5,7 +5,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import edu.caltech.lncrna.bio.annotation.Annotated;
-import edu.caltech.lncrna.bio.annotation.Block;
+import edu.caltech.lncrna.bio.annotation.BlockedAnnotation.BlockedBuilder;
 import edu.caltech.lncrna.bio.annotation.Strand;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
@@ -25,17 +25,21 @@ public final class SingleReadAlignment extends SamRecordImpl implements Alignmen
      */
     public SingleReadAlignment(SAMRecord samRecord) {
         super(samRecord);
+        
         if (!isMapped()) {
             throw new IllegalArgumentException("Attempted to construct " +
                     "SingleReadAlignment from unmapped SAMRecord.");
         }
         
         String ref = samRecord.getReferenceName();
-        // SAM records are one-based inclusive
-        int start = samRecord.getAlignmentStart() - 1;
-        int end = samRecord.getAlignmentEnd();
+
+        int start = samRecord.getAlignmentStart();
         Strand strand = isOnReverseStrand() ? Strand.NEGATIVE : Strand.POSITIVE;
-        annot = new Block(ref, start, end, strand);
+        annot = (new BlockedBuilder())
+                .addBlocksFromCigar(samRecord.getCigar(), ref, start, strand)
+                .build();
+        assert annot.getEnd() == samRecord.getAlignmentEnd() + 1:
+            "BlockedAnnotation is not consistant with SAMRecord.";
     }
 
     @Override
@@ -51,6 +55,16 @@ public final class SingleReadAlignment extends SamRecordImpl implements Alignmen
     @Override
     public int getEnd() {
         return annot.getEnd();
+    }
+    
+    @Override
+    public int getFivePrimePosition() {
+        return annot.getFivePrimePosition();
+    }
+    
+    @Override
+    public int getThreePrimePosition() {
+        return annot.getThreePrimePosition();
     }
 
     @Override
@@ -74,12 +88,17 @@ public final class SingleReadAlignment extends SamRecordImpl implements Alignmen
     }
 
     @Override
-    public Iterator<Block> getBlockIterator() {
+    public Iterator<Annotated> iterator() {
+        return getBlockIterator();
+    }
+    
+    @Override
+    public Iterator<Annotated> getBlockIterator() {
         return annot.getBlockIterator();
     }
 
     @Override
-    public Stream<Block> getBlockStream() {
+    public Stream<Annotated> getBlockStream() {
         return annot.getBlockStream();
     }
 
@@ -94,8 +113,8 @@ public final class SingleReadAlignment extends SamRecordImpl implements Alignmen
     }
 
     @Override
-    public Annotated getHull() {
-        return annot.getHull();
+    public Annotated getBody() {
+        return annot.getBody();
     }
 
     @Override
@@ -112,20 +131,20 @@ public final class SingleReadAlignment extends SamRecordImpl implements Alignmen
     public boolean contains(Annotated other) {
         return annot.contains(other);
     }
-
-    @Override
-    public int getPositionRelativeToFivePrime(int absolutePosition) {
-        return annot.getPositionRelativeToFivePrime(absolutePosition);
-    }
     
     @Override
-    public int getReadPositionFromReferencePosition(int referencePosition) {
-        return annot.getReadPositionFromReferencePosition(referencePosition);
+    public Optional<Annotated> getIntrons() {
+        return annot.getIntrons();
     }
 
     @Override
-    public int getReferencePositionFromReadPosition(int readPosition) {
-        return annot.getReferencePositionFromReadPosition(readPosition);
+    public Iterator<Annotated> getIntronIterator() {
+        return annot.getIntronIterator();
+    }
+
+    @Override
+    public Stream<Annotated> getIntronStream() {
+        return annot.getIntronStream();
     }
     
     public String getCigarString() {
@@ -135,5 +154,34 @@ public final class SingleReadAlignment extends SamRecordImpl implements Alignmen
     @Override
     public void writeTo(SAMFileWriter writer) {
         writer.addAlignment(samRecord);
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        
+        if (!(o instanceof SingleReadAlignment)) {
+            return false;
+        }
+        
+        SingleReadAlignment other = (SingleReadAlignment) o;
+        
+        return samRecord.equals(other.samRecord) &&
+               annot.equals(other.annot);
+    }
+    
+    @Override
+    public int hashCode() {
+        int hashCode = 17;
+        hashCode = 37 * hashCode + samRecord.hashCode();
+        hashCode = 37 * hashCode + annot.hashCode();
+        return hashCode;
+    }
+    
+    @Override
+    public String toString() {
+        return annot.toString();
     }
 }

@@ -255,6 +255,24 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
     }
     
     /**
+     * Removes the given Interval from this IntervalTree
+     * <p>
+     * Specifically, this method removes the element with matching start and
+     * end values and returns it.
+     * @param t - the Interval with matching start and end values
+     * @return the element removed from this IntervalTree
+     */
+    public Optional<T> remove(T t) {
+        Node matchingNode = search(t);
+
+        Optional<T> matchingInterval =
+                Optional.ofNullable(matchingNode.interval);
+
+        matchingNode.delete();
+        return matchingInterval;
+    }
+    
+    /**
      * Deletes the smallest Interval from this IntervalTree.
      * <p>
      * If there is no smallest Interval (that is, if the tree is empty), this
@@ -263,6 +281,21 @@ public class IntervalTree<T extends Interval> implements Iterable<T> {
      */
     public boolean deleteMin() {            // Node#delete does nothing and
         return root.minimumNode().delete(); // returns false if t.isNil()
+    }
+    
+    /**
+     * Deletes and returns the smallest Interval from this IntervalTree.
+     * <p>
+     * If there is no smallest Interval (that is, if the tree is empty), this
+     * IntervalTree remains unchanged, and an empty Optional is returned.
+     * @return an Optional wrapping the smallest Interval in this tree if it
+     * exists; otherwise, an empty Optional
+     */
+    public Optional<T> removeMin() {
+        Node minNode = root.minimumNode();
+        Optional<T> minInterval = Optional.ofNullable(minNode.interval);
+        minNode.delete();
+        return minInterval;
     }
     
     /**

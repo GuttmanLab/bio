@@ -7,7 +7,7 @@ import edu.caltech.lncrna.bio.annotation.BedFileRecord;
 
 public final class BedParser extends TextFileParser<BedFileRecord> {
   
-    public BedParser(Path p) throws IOException {
+    public BedParser(Path p) {
         super(p);
         findNext();
     }

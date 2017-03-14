@@ -1,9 +1,13 @@
 package edu.caltech.lncrna.bio.io;
 
 import java.nio.file.Path;
+import java.util.Iterator;
+import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import edu.caltech.lncrna.bio.alignment.SingleRead;
+import edu.caltech.lncrna.bio.alignment.SingleReadAlignment;
 import edu.caltech.lncrna.bio.annotation.Annotation;
 import edu.caltech.lncrna.bio.utils.CloseableFilteredIterator;
 import edu.caltech.lncrna.bio.utils.CloseableIterator;
@@ -51,6 +55,18 @@ public final class SingleReadBamParser extends BamParser<SingleRead> {
     @Override
     public boolean hasNext() {
         return iterator.hasNext();
+    }
+    
+    @Override
+    public Stream<SingleReadAlignment> getAlignmentStream() {
+        return stream().map(x -> x.getAlignment())
+                .filter(Optional::isPresent)
+                .map(x -> x.get());
+    }
+    
+    @Override
+    public Iterator<SingleReadAlignment> getAlignmentIterator() {
+        return getAlignmentStream().iterator();
     }
     
     public class SingleReadIterator implements CloseableIterator<SingleRead> {

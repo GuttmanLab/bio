@@ -8,11 +8,15 @@ import java.util.Comparator;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarElement;
+import htsjdk.samtools.CigarOperator;
+import htsjdk.samtools.TextCigarCodec;
 
 /**
  * This class represents an <code>Annotation</code> which is made up of
@@ -31,7 +35,7 @@ import java.util.stream.StreamSupport;
  */
 public class BlockedAnnotation extends Annotation {
 
-    protected final List<Block> blocks;
+    protected final List<Annotated> blocks;
     
     protected BlockedAnnotation(BlockedBuilder b) {
         super(b);
@@ -45,7 +49,7 @@ public class BlockedAnnotation extends Annotation {
      */
     public BlockedAnnotation(Annotated b) {
         super(b);
-        List<Block> tmp = new ArrayList<>();
+        List<Annotated> tmp = new ArrayList<>();
         b.getBlockIterator().forEachRemaining(tmp::add);
         blocks = Collections.unmodifiableList(tmp);
     }
@@ -65,14 +69,9 @@ public class BlockedAnnotation extends Annotation {
         blocks = Collections.unmodifiableList(tmp);
     }
     
-    BlockedAnnotation(String ref, int start, int end, Strand strand, List<Block> blocks) {
+    BlockedAnnotation(String ref, int start, int end, Strand strand, List<Annotated> blocks) {
         super(ref, start, end, strand);
         this.blocks = Collections.unmodifiableList(blocks);
-    }
-    
-    @Override
-    public int getSize() {
-        return getBlockStream().mapToInt(b -> b.getSize()).sum();
     }
 
     @Override
@@ -81,59 +80,20 @@ public class BlockedAnnotation extends Annotation {
     }
 
     @Override
-    public Iterator<Block> getBlockIterator() {
+    public Iterator<Annotated> getBlockIterator() {
         return blocks.iterator();
     }
     
     @Override
-    public Stream<Block> getBlockStream() {
-        final Spliterator<Block> s =
+    public Stream<Annotated> getBlockStream() {
+        final Spliterator<Annotated> s =
                 Spliterators.spliteratorUnknownSize(getBlockIterator(),
                                                     Spliterator.ORDERED);
         return StreamSupport.stream(s, false);
     }
     
-    /**
-     * Gets the introns contained in this as an <code>Annotated</code> wrapped
-     * in an <code>Optional</code>.
-     * <p>
-     * If this annotation has no introns, this method returns an empty
-     * <code>Optional</code>.
-     */
-    public Optional<Annotated> getIntrons() {
-        if (blocks.size() == 1) {
-            return Optional.empty();
-        }
-        return getHull().minus(this);
-    }
-    
-    /**
-     * Gets an <code>Iterator</code> over the introns of this
-     * <code>Annotation</code>.
-     * <p>
-     * Returns an empty <code>Iterator</code> if there are no introns.
-     */
-    public Iterator<Block> getIntronBlockIterator() {
-        if (blocks.size() == 1) {
-            return Collections.emptyIterator();
-        }
-        Annotated introns = getHull().minus(this).get();
-        return introns.getBlockIterator();
-    }
-
-    /**
-     * Gets the introns of this <code>Annotation</code> as a 
-     * <code>Stream</code>.
-     */
-    public Stream<Block> getIntronBlockStream() {
-        final Spliterator<Block> introns =
-                Spliterators.spliteratorUnknownSize(getIntronBlockIterator(),
-                                                    Spliterator.ORDERED);
-        return StreamSupport.stream(introns, false);
-    }
-    
     @Override
-    public Annotated getHull() {
+    public Annotated getBody() {
         return new Block(ref, start, end, strand);
     }
 
@@ -163,8 +123,8 @@ public class BlockedAnnotation extends Annotation {
         hashCode = 37 * hashCode + strand.hashCode();
         hashCode = 37 * hashCode + start;
         hashCode = 37 * hashCode + end;
-        for (Block b : blocks) {
-            hashCode = 37 * hashCode + b.hashCode();
+        for (Annotated block : blocks) {
+            hashCode = 37 * hashCode + block.hashCode();
         }
         return hashCode;
     }
@@ -181,7 +141,7 @@ public class BlockedAnnotation extends Annotation {
      */
     public static class BlockedBuilder extends AnnotationBuilder {
 
-        protected List<Block> blocks = new ArrayList<>();
+        protected List<Annotated> blocks = new ArrayList<>();
 
         /**
          * Constructs a new builder containing no <code>Block</code>s.
@@ -197,7 +157,7 @@ public class BlockedAnnotation extends Annotation {
          * add
          * @return this builder for method-chaining
          */
-        public BlockedBuilder addBlocks(Collection<Block> bs) {
+        public BlockedBuilder addBlocks(Collection<Annotated> bs) {
             bs.iterator().forEachRemaining(blocks::add);
             return this;
         }
@@ -207,9 +167,47 @@ public class BlockedAnnotation extends Annotation {
          * @param b - the <code>Block</code> to add
          * @return this builder for method-chaining
          */
-        public BlockedBuilder addBlock(Block b) {
+        public BlockedBuilder addBlock(Annotated b) {
             blocks.add(b);
             return this;
+        }
+        
+        public BlockedBuilder addBlocksFromCigar(Cigar cigar, String ref,
+                int start, Strand strand) {
+            
+            List<CigarElement> elements = cigar.getCigarElements();
+            
+            int currentOffset = start;
+            
+            for (CigarElement element : elements) {
+                CigarOperator op = element.getOperator();
+                int length = element.getLength();
+                
+                switch (op) {
+                case D:
+                case EQ:
+                case M:
+                case X:
+                    int blockEnd = currentOffset + length;
+                    addBlock(new Block(ref, currentOffset, blockEnd, strand));
+                    currentOffset = blockEnd;
+                    break;
+                case N:
+                    currentOffset += length;
+                    break;
+                default:
+                    // Skip H, I, P and S.
+                    break;
+                }
+            }
+            
+            return this;
+        }
+        
+        public BlockedBuilder addBlocksFromCigar(String string, String ref,
+                int start, Strand strand) {
+            Cigar cigar = TextCigarCodec.decode(string);
+            return addBlocksFromCigar(cigar, ref, start, strand);
         }
         
         /**
@@ -257,11 +255,11 @@ public class BlockedAnnotation extends Annotation {
         protected void updateMemberVariablesWithSingleBlock() {
             assert blocks.size() == 1: "Annotation must have one block, but " +
                     "has " + blocks.size() + " blocks.";
-            Block b = blocks.get(0);
-            start = b.start;
-            end = b.end;
-            ref = b.ref;
-            strand = b.strand;
+            Annotated b = blocks.get(0);
+            start = b.getStart();
+            end = b.getEnd();
+            ref = b.getReferenceName();
+            strand = b.getStrand();
         }
 
         /**
@@ -278,13 +276,13 @@ public class BlockedAnnotation extends Annotation {
         protected void mergeBlockListAndUpdateMemberVariables() {
             assert blocks.size() > 1: "Annotation must have more than one " +
                     "block, but has " + blocks.size() + " blocks.";
-            Collections.sort(blocks, Comparator.comparing(Block::getStart)
-                    .thenComparing(Block::getEnd));
+            Collections.sort(blocks, Comparator.comparing(Annotated::getStart)
+                    .thenComparing(Annotated::getEnd));
             
-            Deque<Block> mergedBlocks = new ArrayDeque<>();
+            Deque<Annotated> mergedBlocks = new ArrayDeque<>();
             mergedBlocks.push(blocks.get(0));
             for (int i = 1; i < blocks.size(); i++) {
-                Block currentBlock = blocks.get(i);
+                Annotated currentBlock = blocks.get(i);
                 if (mergedBlocks.peek().overlaps(currentBlock) || mergedBlocks.peek().isAdjacentTo(currentBlock)) {
                     currentBlock = merge(mergedBlocks.pop(), currentBlock);
                 }
@@ -293,12 +291,12 @@ public class BlockedAnnotation extends Annotation {
             
             blocks.clear();
             
-            Block upstreamBlock = mergedBlocks.peekLast();
-            Block downstreamBlock = mergedBlocks.peekFirst();
-            start = upstreamBlock.start;
-            end = downstreamBlock.end;
-            ref = upstreamBlock.ref;
-            strand = upstreamBlock.strand;
+            Annotated upstreamBlock = mergedBlocks.peekLast();
+            Annotated downstreamBlock = mergedBlocks.peekFirst();
+            start = upstreamBlock.getStart();
+            end = downstreamBlock.getEnd();
+            ref = upstreamBlock.getReferenceName();
+            strand = upstreamBlock.getStrand();
 
             // blocks.addAll(mergedBlocks) adds the blocks in
             // downstream-to-upstream order (probably because of pop).
@@ -324,9 +322,9 @@ public class BlockedAnnotation extends Annotation {
             }
             String correctRef = null;
             Strand correctStrand = null;
-            Iterator<Block> iter = blocks.iterator();
+            Iterator<Annotated> iter = blocks.iterator();
             while (iter.hasNext()) {
-                Block b = iter.next();
+                Annotated b = iter.next();
                 if (correctRef == null) {
                     correctRef = b.getReferenceName();
                 } else if (!b.getReferenceName().equals(correctRef)) {
@@ -347,8 +345,8 @@ public class BlockedAnnotation extends Annotation {
         
         /**
          * Helper method to merge two <code>Block</code>s together.
-         * @param a - the first block
-         * @param b - the second block
+         * @param annotated - the first block
+         * @param currentBlock - the second block
          * @throws AssertionError if <code>Block</code>s do not overlap and
          * are not adjacent
          * @throws AssertionError if <code>Block</code>s are not on the same
@@ -356,17 +354,17 @@ public class BlockedAnnotation extends Annotation {
          * @throws AssertionError if <code>Block</code>s are not on the same
          * strand
          */
-        protected Block merge(Block a, Block b) {
-            assert (a.getReferenceName().equals(b.getReferenceName())) :
+        protected Block merge(Annotated annotated, Annotated currentBlock) {
+            assert (annotated.getReferenceName().equals(currentBlock.getReferenceName())) :
                 "Blocks are not on the same reference.";
-            assert (a.overlaps(b) || a.isAdjacentTo(b)) :
+            assert (annotated.overlaps(currentBlock) || annotated.isAdjacentTo(currentBlock)) :
                 "Blocks do not overlap and are not adjacent.";
-            assert (a.getStrand().equals(b.getStrand())) :
+            assert (annotated.getStrand().equals(currentBlock.getStrand())) :
                 "Blocks are not on the same strand.";
-            return new Block(a.getReferenceName(),
-                             Math.min(a.getStart(), b.getStart()),
-                             Math.max(a.getEnd(), b.getEnd()),
-                             a.getStrand());
+            return new Block(annotated.getReferenceName(),
+                             Math.min(annotated.getStart(), currentBlock.getStart()),
+                             Math.max(annotated.getEnd(), currentBlock.getEnd()),
+                             annotated.getStrand());
         }
     }
 }

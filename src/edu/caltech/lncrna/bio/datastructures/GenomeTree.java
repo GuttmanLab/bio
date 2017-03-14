@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import edu.caltech.lncrna.bio.annotation.Annotated;
 import edu.caltech.lncrna.bio.utils.FilteredIterator;
@@ -13,7 +14,7 @@ import edu.caltech.lncrna.bio.utils.FilteredIterator;
  * across an entire genome, e.g., the records from a BED file or a collection
  * of reads from a BAM file.
  */
-public class GenomeTree<T extends Annotated> {
+public class GenomeTree<T extends Annotated> implements Iterable<T> {
 
     private Map<String, IntervalSetTree<T>> chroms;
     
@@ -25,14 +26,14 @@ public class GenomeTree<T extends Annotated> {
     }
     
     /**
-     * Whether or not this has any <code>Annotation</code>s stored in it.
+     * Whether or not this has any elements stored in it.
      */
     public boolean isEmpty() {
         return chroms.isEmpty() || getSize() == 0;
     }
     
     /**
-     * Gets the total number of <code>Annotation</code>s in this.
+     * Gets the total number of elements in this.
      */
     public int getSize() {
         return chroms.values()
@@ -42,8 +43,8 @@ public class GenomeTree<T extends Annotated> {
     }
     
     /**
-     * Inserts an <code>Annotation</code> into this.
-     * @param a - the <code>Annotation</code> to insert
+     * Inserts an <code>Annotated</code> object into this.
+     * @param a - the <code>Annotated</code> object to insert
      * @return <code>true</code> if the addition resulted in a change to the
      * tree; otherwise (if the value was already present, for example),
      * <code>false</code>
@@ -54,9 +55,9 @@ public class GenomeTree<T extends Annotated> {
     }
     
     /**
-     * Gets an <code>Iterator</code> over all values in this which overlap
-     * a given <code>Annotation</code>
-     * @param a - the given <code>Annotation</code>
+     * Gets an <code>Iterator</code> over all elements in this which overlap
+     * a given <code>Annotated</code> object.
+     * @param a - the given <code>Annotated</code> object
      */
     public Iterator<T> getOverlappers(Annotated a) {
         IntervalSetTree<T> tree = chroms.get(a.getReferenceName());
@@ -65,10 +66,16 @@ public class GenomeTree<T extends Annotated> {
             return Collections.emptyIterator();
         } else {
             return new FilteredIterator<T>(tree.overlappers(a),
-                    o -> a.getReferenceName().equals(o.getReferenceName()) && o.overlaps(a));
+                    o -> a.getReferenceName().equals(o.getReferenceName())
+                         && o.overlaps(a));
         }
     }
     
+    /**
+     * Gets an <code>Iterator</code> over all elements whose hulls overlap a
+     * given <code>Annotated</code> object.
+     * @param a - the given <code>Annotated</code> object
+     */
     public Iterator<T> getHullOverlappers(Annotated a) {
         IntervalSetTree<T> tree = chroms.get(a.getReferenceName());
         
@@ -79,6 +86,16 @@ public class GenomeTree<T extends Annotated> {
         }
     }
     
+    /**
+     * Get the number of elements that overlap the given <code>Annotated</code>
+     * object.
+     * 
+     * This method will iterate over all of the elements, so if you need to
+     * count them in addition to performing some other operation, you probably
+     * want to work with the iterator directly by calling
+     * <code>getOverlappers</code>
+     * @param a - the given <code>Annotated</code> object
+     */
     public int getNumOverlappers(Annotated a) {
         Iterator<T> overlappers = getOverlappers(a);
         int count = 0;
@@ -87,5 +104,90 @@ public class GenomeTree<T extends Annotated> {
             count++;
         }
         return count;
+    }
+    
+    /**
+     * Whether a given <code>Annotated</code> overlaps any element in this.
+     * @param a - the given <code>Annotated</code> object
+     */
+    public boolean overlaps(Annotated a) {
+        return getOverlappers(a).hasNext();
+    }
+    
+    public boolean anyHullOverlaps(Annotated a) {
+        return getHullOverlappers(a).hasNext();
+    }
+
+
+    @Override
+    public Iterator<T> iterator() {
+        return new TreeIterator(chroms);
+    }
+    
+    private class ChromosomeIterator implements Iterator<IntervalSetTree<T>> {
+
+        private Iterator<IntervalSetTree<T>> iter;
+        private IntervalSetTree<T> next;
+        
+        private ChromosomeIterator(Map<String, IntervalSetTree<T>> chromMap) {
+            iter = chromMap.values().iterator();
+            findNext();
+        }
+        
+        private void findNext() {
+            next = null;
+            while (next == null && iter.hasNext()) {
+                next = iter.next();
+                if (next.isEmpty()) {
+                    next = null;
+                }
+            }
+        }
+        
+        @Override
+        public boolean hasNext() {
+            return next != null;
+        }
+
+        @Override
+        public IntervalSetTree<T> next() {
+            IntervalSetTree<T> rtrn = next;
+            findNext();
+            return rtrn;
+        }
+    }
+    
+    private class TreeIterator implements Iterator<T> {
+
+        private final ChromosomeIterator chromIter;
+        private Iterator<T> chromElements;
+        
+        private TreeIterator(Map<String, IntervalSetTree<T>> chromMap) {
+            chromIter = new ChromosomeIterator(chromMap);
+            if (chromIter.hasNext()) {
+                chromElements = chromIter.next().iterator();
+            } else {
+                chromElements = Collections.emptyIterator();
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return chromElements.hasNext() || chromIter.hasNext();
+        }
+
+        @Override
+        public T next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            } else if (chromElements.hasNext()) {
+                return chromElements.next();
+            } else {
+                assert chromIter.hasNext() :
+                    "Unexpectedly ran out of chromosomes.";
+                chromElements = chromIter.next().iterator();
+                return chromElements.next();
+            }
+        }
     }
 }

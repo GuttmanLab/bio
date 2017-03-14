@@ -3,7 +3,6 @@ package edu.caltech.lncrna.bio.utils;
 import java.util.NoSuchElementException;
 import java.util.function.Predicate;
 
-
 public class CloseableFilteredIterator<T> implements CloseableIterator<T> {
     private CloseableIterator<? extends T> iterator;
     private Predicate<T> predicate;

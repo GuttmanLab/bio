@@ -9,6 +9,11 @@ import htsjdk.samtools.SAMFileWriter;
 public interface PairedSamRecord {
     
     /**
+     * Gets the name of this.
+     */
+    public String getName();
+    
+    /**
      * Returns the first read in the pair.
      */
     public SamRecord getFirstReadInPair();

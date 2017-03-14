@@ -42,6 +42,11 @@ public class ReadPair implements PairedSamRecord, Aligned<PairedEndAlignment> {
     }
 
     @Override
+    public String getName() {
+        return read1.getName();
+    }
+    
+    @Override
     public SingleRead getFirstReadInPair() {
         return read1;
     }
@@ -77,5 +82,29 @@ public class ReadPair implements PairedSamRecord, Aligned<PairedEndAlignment> {
     public void writeTo(SAMFileWriter writer) {
         read1.writeTo(writer);
         read2.writeTo(writer);
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        
+        if (!(o instanceof ReadPair)) {
+            return false;
+        }
+        
+        ReadPair other = (ReadPair) o;
+        
+        return read1.equals(other.read1) &&
+               read2.equals(other.read2);
+    }
+    
+    @Override
+    public int hashCode() {
+        int hashCode = 17;
+        hashCode = 37 * hashCode + read1.hashCode();
+        hashCode = 37 * hashCode + read2.hashCode();
+        return hashCode;
     }
 }

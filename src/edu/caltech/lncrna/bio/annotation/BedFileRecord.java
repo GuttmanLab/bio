@@ -100,7 +100,7 @@ public final class BedFileRecord extends Gene implements AnnotationFileRecord {
         if (numFields == 9) return sb.toString();
         
         sb.append("\t" + getNumberOfBlocks() + "\t");
-        Iterator<Block> blocks = getBlockIterator();
+        Iterator<Annotated> blocks = getBlockIterator();
         while (blocks.hasNext()) {
             Annotated block = blocks.next();
             sb.append(block.getSize() + ","); // trailing comma after last block is OK
@@ -254,7 +254,7 @@ public final class BedFileRecord extends Gene implements AnnotationFileRecord {
         hashCode = 37 * hashCode + cdsEndPos;
         hashCode = 37 * hashCode + Double.hashCode(score);
         hashCode = 37 * hashCode + color.hashCode();
-        for (Block b : blocks) {
+        for (Annotated b : blocks) {
             hashCode = 37 * hashCode + b.hashCode();
         }
 
@@ -348,12 +348,12 @@ public final class BedFileRecord extends Gene implements AnnotationFileRecord {
         }
         
         @Override
-        public BedBuilder addBlock(Block b) {
+        public BedBuilder addBlock(Annotated b) {
             return (BedBuilder) super.addBlock(b);
         }
         
         @Override
-        public BedBuilder addBlocks(Collection<Block> bs) {
+        public BedBuilder addBlocks(Collection<Annotated> bs) {
             return (BedBuilder) super.addBlocks(bs);
         }
         

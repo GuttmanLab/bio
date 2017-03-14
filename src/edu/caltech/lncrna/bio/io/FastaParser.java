@@ -2,6 +2,7 @@ package edu.caltech.lncrna.bio.io;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.text.ParseException;
 
 import edu.caltech.lncrna.bio.sequence.FastaSequence;
 
@@ -9,19 +10,24 @@ public final class FastaParser extends TextFileParser<FastaSequence> {
 
     private String nextName = null;
 
-    public FastaParser(Path p) throws IOException {
+    public FastaParser(Path p) throws ParseException {
         super(p);
         findFirst();
     }
 
-    private void findFirst() throws IOException {
+    private void findFirst() throws ParseException {
         String line = null;
         
-        line = br.readLine();
+        try {
+            line = br.readLine();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        
         if (line == null) {
             nextName = null;
         } else if (!line.startsWith(">")) {
-            throw new IOException("");
+            throw new ParseException("FASTA record found without initial '>'", 0);
         } else {
             nextName = line.substring(1);
         }

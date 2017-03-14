@@ -3,9 +3,9 @@ package edu.caltech.lncrna.bio.testing;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
 
 import org.junit.Test;
 
@@ -16,7 +16,7 @@ public class TestFastaParser {
     private final static Path TEST_FASTA = Paths.get("/Users/mason/Documents/workspace/bio/src/testing/test.fa");
 
     @Test
-    public void TestNumberOfFastaRecords() throws IOException {
+    public void TestNumberOfFastaRecords() throws ParseException {
         try (FastaParser fp = new FastaParser(TEST_FASTA)) {
             int count = fp.stream().mapToInt(e -> 1).sum();
             assertThat(count, is(3));
@@ -24,7 +24,7 @@ public class TestFastaParser {
     }
     
     @Test
-    public void TestFastaNames() throws IOException {
+    public void TestFastaNames() throws ParseException {
         try (FastaParser fp = new FastaParser(TEST_FASTA)) {
             String[] names = {"chr1", "chr2", "chr3"};
             int index = 0;
@@ -36,7 +36,7 @@ public class TestFastaParser {
     }
     
     @Test
-    public void TestFastaSequenceLengths() throws IOException {
+    public void TestFastaSequenceLengths() throws ParseException {
         try (FastaParser fp = new FastaParser(TEST_FASTA)) {
             int[] lengths = {1000, 50, 1000};
             int index = 0;

@@ -12,7 +12,7 @@ public final class FastqParser extends TextFileParser<FastqSequence> {
     private final PhredEncoding pe;
     private final static int NUM_FASTQ_LINES = 4;
     
-    public FastqParser(Path p, PhredEncoding pe) throws IOException {
+    public FastqParser(Path p, PhredEncoding pe) {
         super(p);
         Objects.requireNonNull(pe, "Attempted to construct a FastqParser " +
                 "with a null Phred encoding.");
@@ -20,7 +20,7 @@ public final class FastqParser extends TextFileParser<FastqSequence> {
         findNext();
     }
     
-    public FastqParser(Path p) throws IOException {
+    public FastqParser(Path p) {
         this(p, PhredEncoding.SANGER);
     }
     

@@ -6,7 +6,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import edu.caltech.lncrna.bio.annotation.Annotated;
-import edu.caltech.lncrna.bio.annotation.Block;
+import edu.caltech.lncrna.bio.annotation.BlockedAnnotation.BlockedBuilder;
 import edu.caltech.lncrna.bio.annotation.Strand;
 import htsjdk.samtools.SAMFileWriter;
 
@@ -55,12 +55,25 @@ public final class PairedEndAlignment implements PairedSamRecord, Alignment {
                     "references: " + ref1 + ", " + ref2);
         }
         
-        int start = Math.min(read1.getStart(), read2.getStart());
-        int end = Math.max(read1.getEnd(), read2.getEnd());
-        
         pairOrientation = PairOrientation.getPairOrientation(read1, read2);
         Strand strand = pairOrientation.getStrand();
-        annot = new Block(ref1, start, end, strand);
+        annot = (new BlockedBuilder())
+                .addBlocksFromCigar(read1.samRecord.getCigar(), ref1,
+                        read1.getStart(), strand)
+                .addBlocksFromCigar(read2.samRecord.getCigar(), ref2,
+                        read2.getStart(), strand)
+                .build();
+        assert annot.getEnd() == Math.max(read1.getEnd(), read2.getEnd()) :
+            "BlockedAnnotation is not consistant with SAMRecord.";
+    }
+    
+    public PairOrientation getPairOrientation() {
+        return pairOrientation;
+    }
+    
+    @Override
+    public String getName() {
+        return read1.getName();
     }
     
     @Override
@@ -87,6 +100,16 @@ public final class PairedEndAlignment implements PairedSamRecord, Alignment {
     public int getEnd() {
         return annot.getEnd();
     }
+    
+    @Override
+    public int getFivePrimePosition() {
+        return annot.getFivePrimePosition();
+    }
+    
+    @Override
+    public int getThreePrimePosition() {
+        return annot.getThreePrimePosition();
+    }
 
     @Override
     public int getSize() {
@@ -109,12 +132,17 @@ public final class PairedEndAlignment implements PairedSamRecord, Alignment {
     }
 
     @Override
-    public Iterator<Block> getBlockIterator() {
+    public Iterator<Annotated> iterator() {
+        return getBlockIterator();
+    }
+    
+    @Override
+    public Iterator<Annotated> getBlockIterator() {
         return annot.getBlockIterator();
     }
 
     @Override
-    public Stream<Block> getBlockStream() {
+    public Stream<Annotated> getBlockStream() {
         return annot.getBlockStream();
     }
 
@@ -129,8 +157,8 @@ public final class PairedEndAlignment implements PairedSamRecord, Alignment {
     }
 
     @Override
-    public Annotated getHull() {
-        return annot.getHull();
+    public Annotated getBody() {
+        return annot.getBody();
     }
 
     @Override
@@ -146,21 +174,6 @@ public final class PairedEndAlignment implements PairedSamRecord, Alignment {
     @Override
     public boolean contains(Annotated other) {
         return annot.contains(other);
-    }
-
-    @Override
-    public int getPositionRelativeToFivePrime(int absolutePosition) {
-        return annot.getPositionRelativeToFivePrime(absolutePosition);
-    }
-    
-    @Override
-    public int getReadPositionFromReferencePosition(int referencePosition) {
-        return annot.getReadPositionFromReferencePosition(referencePosition);
-    }
-
-    @Override
-    public int getReferencePositionFromReadPosition(int readPosition) {
-        return annot.getReferencePositionFromReadPosition(readPosition);
     }
 
     @Override
@@ -185,5 +198,53 @@ public final class PairedEndAlignment implements PairedSamRecord, Alignment {
         }
         
         return Math.max(read1Start, read2Start) - Math.min(read1End, read2End);
+    }
+    
+    @Override
+    public Optional<Annotated> getIntrons() {
+        return annot.getIntrons();
+    }
+
+    @Override
+    public Iterator<Annotated> getIntronIterator() {
+        return annot.getIntronIterator();
+    }
+
+    @Override
+    public Stream<Annotated> getIntronStream() {
+        return annot.getIntronStream();
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        
+        if (!(o instanceof PairedEndAlignment)) {
+            return false;
+        }
+        
+        PairedEndAlignment other = (PairedEndAlignment) o;
+        
+        return read1.equals(other.read1) &&
+               read2.equals(other.read2) &&
+               annot.equals(other.annot) &&
+               pairOrientation.equals(other.pairOrientation);
+    }
+    
+    @Override
+    public int hashCode() {
+        int hashCode = 17;
+        hashCode = 37 * hashCode + read1.hashCode();
+        hashCode = 37 * hashCode + read2.hashCode();
+        hashCode = 37 * hashCode + annot.hashCode();
+        hashCode = 37 * hashCode + pairOrientation.hashCode();
+        return hashCode;
+    }
+    
+    @Override
+    public String toString() {
+        return annot.toString();
     }
 }

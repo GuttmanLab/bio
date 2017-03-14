@@ -39,6 +39,10 @@ public class Block extends Annotation implements Annotated {
     public Block(Annotated annot, Strand strand) {
         super(annot, strand);
     }
+    
+    public Block(Annotated annot) {
+        super(annot);
+    }
 
     @Override
     public int getNumberOfBlocks() {
@@ -46,15 +50,15 @@ public class Block extends Annotation implements Annotated {
     }
     
     @Override
-    public Iterator<Block> getBlockIterator() {
-        List<Block> list = new ArrayList<>();
+    public Iterator<Annotated> getBlockIterator() {
+        List<Annotated> list = new ArrayList<>();
         list.add(this);
         return list.iterator();
     }
 
     @Override
-    public Stream<Block> getBlockStream() {
-        List<Block> list = new ArrayList<>();
+    public Stream<Annotated> getBlockStream() {
+        List<Annotated> list = new ArrayList<>();
         list.add(this);
         return list.stream();
     }
@@ -88,7 +92,7 @@ public class Block extends Annotation implements Annotated {
     }
 
     @Override
-    public Annotated getHull() {
+    public Annotated getBody() {
         return this;
     }
     
@@ -101,27 +105,17 @@ public class Block extends Annotation implements Annotated {
      * @throws IllegalArgumentException if either the step size or the window
      * size are less than one.
      */
-    public Iterator<Block> tile(int windowSize, int stepSize) {
-        if (windowSize <= 0) {
-            throw new IllegalArgumentException("Attempted to tile with " +
-                    "window size: " + windowSize + ". Window size must be " +
-                    "greater than zero.");
-        }
-        if (stepSize <= 0) {
-            throw new IllegalArgumentException("Attempted to tile with " +
-                    "step size: " + stepSize + ". Step size must be " +
-                    "greater than zero.");
-        }
+    public Iterator<Annotated> tile(int windowSize, int stepSize) {
         return new TilingBlockIterator(this, windowSize, stepSize);
     }
     
-    private class TilingBlockIterator implements Iterator<Block> {
+    private class TilingBlockIterator implements Iterator<Annotated> {
 
         private final int windowSize;
         private final int stepSize;
-        private final Block underlyingBlock;
+        private final Annotated underlyingBlock;
         private int currentPosition;
-        private Block nextBlock;
+        private Annotated nextBlock;
         
         public TilingBlockIterator(Block block, int windowSize, int stepSize) {
             if (windowSize <= 0) {
@@ -147,11 +141,11 @@ public class Block extends Annotation implements Annotated {
         }
         
         @Override
-        public Block next() {
+        public Annotated next() {
             if (!hasNext()) {
                 throw new NoSuchElementException();
             }
-            Block rtrn = nextBlock;
+            Annotated rtrn = nextBlock;
             nextBlock = getNext();
             return rtrn;
         }
@@ -160,8 +154,8 @@ public class Block extends Annotation implements Annotated {
             return underlyingBlock.contains(nextBlock);
         }
 
-        private Block getNext() {
-            Block rtrn = new Block(underlyingBlock.getReferenceName(), currentPosition,
+        private Annotated getNext() {
+            Annotated rtrn = new Block(underlyingBlock.getReferenceName(), currentPosition,
                                    currentPosition + windowSize, underlyingBlock.getStrand());
             currentPosition += stepSize;
             return rtrn;
