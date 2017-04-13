@@ -7,12 +7,12 @@ import org.junit.runners.Suite;
 
 @Suite.SuiteClasses({
     // annotation package
+    TestAnnotation.class,
     TestAnnotationBuilder.class,
     TestAnnotationContainment.class,
     TestAnnotationIntersection.class,
     TestAnnotationOverlap.class,
-    TestBlock.class,
-    TestBlockedAnnotation.class,
+    TestCigarIterator.class,
     TestStrand.class,
     TestWindowIterator.class,
     

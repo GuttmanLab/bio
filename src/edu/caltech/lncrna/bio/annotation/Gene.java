@@ -1,7 +1,6 @@
 package edu.caltech.lncrna.bio.annotation;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -21,7 +20,7 @@ import java.util.Optional;
  * </code>
  * </pre>
  */
-public class Gene extends BlockedAnnotation {
+public class Gene extends Annotation {
 
     protected final String name;
     
@@ -37,13 +36,6 @@ public class Gene extends BlockedAnnotation {
     
     public Gene(Annotated a, String name, int cdsStartPos, int cdsEndPos) {
         super(a);
-        this.name = name;
-        this.cdsStartPos = cdsStartPos;
-        this.cdsEndPos = cdsEndPos;
-    }
-    
-    Gene(String ref, String name, int start, int end, int cdsStartPos, int cdsEndPos, Strand strand, List<Annotated> blocks) {
-        super(ref, start, end, strand, blocks);
         this.name = name;
         this.cdsStartPos = cdsStartPos;
         this.cdsEndPos = cdsEndPos;
@@ -77,7 +69,7 @@ public class Gene extends BlockedAnnotation {
             return Optional.empty();
         }
         
-        Annotated cds = new Block(getReferenceName(), cdsStartPos, cdsEndPos, getStrand());
+        Annotated cds = new Annotation(getReferenceName(), cdsStartPos, cdsEndPos, getStrand());
         return intersect(cds);
     }
     
@@ -93,29 +85,18 @@ public class Gene extends BlockedAnnotation {
         
         Gene other = (Gene) o;
         
-        return ref.equals(other.ref) &&
+        return super.equals(other) &&
                name.equals(other.name) &&
-               start == other.start &&
-               end == other.end &&
-               strand.equals(other.strand) &&
-               cdsStartPos == other.cdsStartPos &&
-               cdsEndPos == other.cdsEndPos &&
-               blocks.equals(other.blocks);
+               ((cdsStartPos == other.cdsStartPos && cdsEndPos == other.cdsEndPos) ||
+                (cdsStartPos == cdsEndPos && other.cdsStartPos == other.cdsEndPos));
     }
     
     @Override
     public int hashCode() {
-        int hashCode = 17;
-        hashCode = 37 * hashCode + ref.hashCode();
-        hashCode = 37 * hashCode + strand.hashCode();
-        hashCode = 37 * hashCode + start;
-        hashCode = 37 * hashCode + end;
+        int hashCode = super.hashCode();
         hashCode = 37 * hashCode + name.hashCode();
         hashCode = 37 * hashCode + cdsStartPos;
         hashCode = 37 * hashCode + cdsEndPos;
-        for (Annotated b : blocks) {
-            hashCode = 37 * hashCode + b.hashCode();
-        }
 
         return hashCode;
     }
@@ -133,7 +114,7 @@ public class Gene extends BlockedAnnotation {
      * to the empty <code>String</code>. A <code>Gene</code>'s coding region is
      * also optional.
      */
-    public static class GeneBuilder extends BlockedBuilder {
+    public static class GeneBuilder extends AnnotationBuilder {
         
         protected String name = "";
         protected int cdsStart;
@@ -179,13 +160,13 @@ public class Gene extends BlockedAnnotation {
         }
         
         @Override
-        public GeneBuilder addBlock(Annotated b) {
-            return (GeneBuilder) super.addBlock(b);
+        public GeneBuilder addAnnotation(Annotated annot) {
+            return (GeneBuilder) super.addAnnotation(annot);
         }
         
         @Override
-        public GeneBuilder addBlocks(Collection<Annotated> bs) {
-            return (GeneBuilder) super.addBlocks(bs);
+        public GeneBuilder addAnnotations(Collection<Annotated> annots) {
+            return (GeneBuilder) super.addAnnotations(annots);
         }
      
         @Override
@@ -228,19 +209,20 @@ public class Gene extends BlockedAnnotation {
                         "cdsStart must be less than or equal to cdsEnd. " +
                         "cdsStart: " + cdsStart + ", cdsEnd: " + cdsEnd);
             }
-            if (cdsStart < start) {
+            if (cdsStart < blockBoundaries[0]) {
                 throw new IllegalArgumentException("Attempted to build an " +
                         "Annotation with an invalid coding region. " +
                         "cdsStart must be greater than or equal to " +
                         "the starting reference position. cdsStart: " + 
-                        cdsStart + ", refStart: " + start);
+                        cdsStart + ", refStart: " + blockBoundaries[0]);
             }
-            if (cdsEnd > end) {
+            if (cdsEnd > blockBoundaries[blockBoundaries.length - 1]) {
                 throw new IllegalArgumentException("Attempted to build an " +
                         "Annotation with an invalid coding region. " +
                         "cdsStart must be less than or equal to " +
                         "the ending reference position. cdsStart: " + 
-                        cdsStart + ", refEnd: " + end);
+                        cdsStart + ", refEnd: " +
+                        blockBoundaries[blockBoundaries.length - 1]);
             }
         }
         
@@ -251,8 +233,8 @@ public class Gene extends BlockedAnnotation {
          * thick-end values in a BED file: the builder's start-coordinate.
          */
         protected void setDefaultCdsValues() {
-            cdsStart = start;
-            cdsEnd = start;
+            cdsStart = blockBoundaries[0];
+            cdsEnd = cdsStart;
         }
     }
 }

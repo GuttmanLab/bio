@@ -81,7 +81,7 @@ public final class BedpeFileRecord implements AnnotationFileRecord {
         int start = Math.min(block1.getStart(), block2.getStart());
         int end = Math.max(block1.getEnd(), block2.getEnd());
                       
-        gb.addBlock(new Block(refName, start, end, strand));
+        gb.addAnnotation(new Annotation(refName, start, end, strand));
         gb.addName(name);
         return Optional.of(gb.build());
     }
@@ -208,8 +208,8 @@ public final class BedpeFileRecord implements AnnotationFileRecord {
             strand2 = Strand.fromString(fields[9]);
         }
         
-        bb.addBlock1(new Block(ref1, start1, end1, strand1));
-        bb.addBlock2(new Block(ref2, start2, end2, strand2));
+        bb.addBlock1(new Annotation(ref1, start1, end1, strand1));
+        bb.addBlock2(new Annotation(ref2, start2, end2, strand2));
 
         if (fields.length >= 7) {
             bb.addName(fields[6]);

@@ -180,7 +180,7 @@ public enum Strand {
      * The intersect operation is symmetric.
      * @param s - the other strand
      */
-    public abstract Strand intersect(Strand s);
+    public abstract Strand intersect(Strand other);
     
     public abstract boolean contains(Strand other);
 }

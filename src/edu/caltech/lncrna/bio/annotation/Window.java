@@ -9,7 +9,7 @@ import java.util.Set;
  * @param <T>
  */
 public class Window<T extends Annotated>
-extends Block implements Populated<T>, Scored {
+extends Annotation implements Populated<T>, Scored {
 
     private Set<T> annotations;
     
@@ -50,27 +50,20 @@ extends Block implements Populated<T>, Scored {
         
         Window<?> other = (Window<?>) o;
         
-        return ref.equals(other.ref) &&
-               start == other.start &&
-               end == other.end &&
-               strand.equals(other.strand) &&
+        return super.equals(other) &&
                annotations.equals(other.annotations);
     }
     
     @Override
     public int hashCode() {
-        int hashCode = 17;
-        hashCode = 37 * hashCode + ref.hashCode();
-        hashCode = 37 * hashCode + strand.hashCode();
-        hashCode = 37 * hashCode + start;
-        hashCode = 37 * hashCode + end;
+        int hashCode = super.hashCode();
         hashCode = 37 * hashCode + annotations.hashCode();
         return hashCode;
     }
     
     @Override
     public String toString() {
-        return ref + ":" + start + "-" + end + "(" + strand.toString() +
+        return ref + ":" + getStart() + "-" + getEnd() + "(" + strand.toString() +
                 ") Population: " + getPopulationSize();
     }
 }

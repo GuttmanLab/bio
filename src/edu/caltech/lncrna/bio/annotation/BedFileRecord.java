@@ -75,7 +75,7 @@ public final class BedFileRecord extends Gene implements AnnotationFileRecord {
         
         // Required fields
         final StringBuilder sb = new StringBuilder();
-        sb.append(ref + "\t" + start + "\t" + end);
+        sb.append(ref + "\t" + getStart() + "\t" + getEnd());
         if (numFields == 3) return sb.toString();
         
         // Name
@@ -138,8 +138,8 @@ public final class BedFileRecord extends Gene implements AnnotationFileRecord {
 
         // Fields 0, 1, and 2 are guaranteed to be present; otherwise this isn't a valid BED file.
         String chrom = fields[0];
-        int chromStart = Integer.parseInt(fields[1]);
-        int chromEnd = Integer.parseInt(fields[2]);
+        int chromStart = Integer.parseInt(fields[1]) + 1;
+        int chromEnd = Integer.parseInt(fields[2]) + 1;
 
         
         // All fields present. This is an Annotation with multiple blocks
@@ -158,17 +158,17 @@ public final class BedFileRecord extends Gene implements AnnotationFileRecord {
             // TODO check consistency between field[2] and last block.
             
             for (int i = 0; i < blockCount; i++) {
-                bb.addBlock(new Block(chrom, chromStart + blockStarts[i], chromStart + blockStarts[i] + blockSizes[i], strand));
+                bb.addAnnotation(new Annotation(chrom, chromStart + blockStarts[i], chromStart + blockStarts[i] + blockSizes[i], strand));
             }
         
         // This is an Annotation with one block and strand information.
         } else if (numFields >= 6) {
             Strand strand = Strand.fromString(fields[5]);
-            bb.addBlock(new Block(chrom, chromStart, chromEnd, strand));
+            bb.addAnnotation(new Annotation(chrom, chromStart, chromEnd, strand));
 
         // This is an Annotation with one block and no strand information: default to Strand.BOTH.
         } else {
-            bb.addBlock(new Block(chrom, chromStart, chromEnd, Strand.BOTH));
+            bb.addAnnotation(new Annotation(chrom, chromStart, chromEnd, Strand.BOTH));
         }
         
         // Annotation has been constructed. Add the rest of the fields.
@@ -187,7 +187,7 @@ public final class BedFileRecord extends Gene implements AnnotationFileRecord {
         
         // Add line thickness.
         if (numFields >= 8) {
-            bb.addCodingRegion(Integer.parseInt(fields[6]), Integer.parseInt(fields[7]));
+            bb.addCodingRegion(Integer.parseInt(fields[6]) + 1, Integer.parseInt(fields[7]) + 1);
         }
         
         // Add color.
@@ -230,34 +230,16 @@ public final class BedFileRecord extends Gene implements AnnotationFileRecord {
         
         BedFileRecord other = (BedFileRecord) o;
         
-        return ref.equals(other.ref) &&
-               name.equals(other.name) &&
-               start == other.start &&
-               end == other.end &&
-               strand.equals(other.strand) &&
-               cdsStartPos == other.cdsStartPos &&
-               cdsEndPos == other.cdsEndPos &&
-               blocks.equals(other.blocks) &&
+        return super.equals(other) &&
                score == other.score &&
                color.equals(other.color);
     }
     
     @Override
     public int hashCode() {
-        int hashCode = 17;
-        hashCode = 37 * hashCode + ref.hashCode();
-        hashCode = 37 * hashCode + strand.hashCode();
-        hashCode = 37 * hashCode + start;
-        hashCode = 37 * hashCode + end;
-        hashCode = 37 * hashCode + name.hashCode();
-        hashCode = 37 * hashCode + cdsStartPos;
-        hashCode = 37 * hashCode + cdsEndPos;
+        int hashCode = super.hashCode();
         hashCode = 37 * hashCode + Double.hashCode(score);
         hashCode = 37 * hashCode + color.hashCode();
-        for (Annotated b : blocks) {
-            hashCode = 37 * hashCode + b.hashCode();
-        }
-
         return hashCode;
     }
     
@@ -348,13 +330,13 @@ public final class BedFileRecord extends Gene implements AnnotationFileRecord {
         }
         
         @Override
-        public BedBuilder addBlock(Annotated b) {
-            return (BedBuilder) super.addBlock(b);
+        public BedBuilder addAnnotation(Annotated b) {
+            return (BedBuilder) super.addAnnotation(b);
         }
         
         @Override
-        public BedBuilder addBlocks(Collection<Annotated> bs) {
-            return (BedBuilder) super.addBlocks(bs);
+        public BedBuilder addAnnotations(Collection<Annotated> bs) {
+            return (BedBuilder) super.addAnnotations(bs);
         }
         
         @Override

@@ -6,7 +6,8 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import edu.caltech.lncrna.bio.annotation.Annotated;
-import edu.caltech.lncrna.bio.annotation.BlockedAnnotation.BlockedBuilder;
+import edu.caltech.lncrna.bio.annotation.Annotation;
+import edu.caltech.lncrna.bio.annotation.Annotation.AnnotationBuilder;
 import edu.caltech.lncrna.bio.annotation.Strand;
 import htsjdk.samtools.SAMFileWriter;
 
@@ -57,14 +58,14 @@ public final class PairedEndAlignment implements PairedSamRecord, Alignment {
         
         pairOrientation = PairOrientation.getPairOrientation(read1, read2);
         Strand strand = pairOrientation.getStrand();
-        annot = (new BlockedBuilder())
-                .addBlocksFromCigar(read1.samRecord.getCigar(), ref1,
+        annot = (new AnnotationBuilder())
+                .addAnnotationFromCigar(read1.samRecord.getCigar(), ref1,
                         read1.getStart(), strand)
-                .addBlocksFromCigar(read2.samRecord.getCigar(), ref2,
+                .addAnnotationFromCigar(read2.samRecord.getCigar(), ref2,
                         read2.getStart(), strand)
                 .build();
         assert annot.getEnd() == Math.max(read1.getEnd(), read2.getEnd()) :
-            "BlockedAnnotation is not consistant with SAMRecord.";
+            "Annotation is not consistant with SAMRecord.";
     }
     
     public PairOrientation getPairOrientation() {
@@ -125,6 +126,11 @@ public final class PairedEndAlignment implements PairedSamRecord, Alignment {
     public Strand getStrand() {
         return annot.getStrand();
     }
+    
+    @Override
+    public int[] getBlockBoundaries() {
+        return annot.getBlockBoundaries();
+    }
 
     @Override
     public int getNumberOfBlocks() {
@@ -182,22 +188,46 @@ public final class PairedEndAlignment implements PairedSamRecord, Alignment {
         read2.writeTo(writer);
     }
     
+    @Override
+    public boolean isUpstreamOf(Annotated other) {
+        return annot.isUpstreamOf(other);
+    }
+
+    @Override
+    public boolean isDownstreamOf(Annotated other) {
+        // TODO Auto-generated method stub
+        return annot.isDownstreamOf(other);
+    }
+    
     /**
      * Returns the insert size of this <code>PairedEndAlignment</code>.
      * <p>
      * If the reads overlap, this method returns 0.
      */
     public int getInsertSize() {
+        Optional<Annotated> insert = getInsert();
+
+        if (insert.isPresent()) {
+            return insert.get().getSize();
+        }
+        
+        return 0;
+    } 
+    
+    public Optional<Annotated> getInsert() {
         int read1Start = read1.getStart();
         int read2Start = read2.getStart();
         int read1End = read1.getEnd();
         int read2End = read2.getEnd();
         
-        if (read1Start < read2End && read2Start < read1End) {
-            return 0;
+        if (read1Start <= read2End && read2Start <= read1End) {
+            return Optional.empty();
         }
-        
-        return Math.max(read1Start, read2Start) - Math.min(read1End, read2End);
+
+        return Optional.of(new Annotation(getReferenceName(),
+                               Math.min(read1End, read2End),
+                               Math.max(read1Start, read2Start),
+                               getStrand()));
     }
     
     @Override
@@ -247,4 +277,5 @@ public final class PairedEndAlignment implements PairedSamRecord, Alignment {
     public String toString() {
         return annot.toString();
     }
+
 }

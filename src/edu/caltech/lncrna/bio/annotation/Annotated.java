@@ -157,4 +157,11 @@ public interface Annotated extends Interval, Iterable<Annotated> {
     public int getFivePrimePosition();
     
     public int getThreePrimePosition();
+    
+    public boolean isUpstreamOf(Annotated other);
+    
+    public boolean isDownstreamOf(Annotated other);
+    
+    // TODO: Make this method private when Java 9 comes out
+    public int[] getBlockBoundaries();
 }

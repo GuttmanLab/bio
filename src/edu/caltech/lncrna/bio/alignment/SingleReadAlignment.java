@@ -5,7 +5,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import edu.caltech.lncrna.bio.annotation.Annotated;
-import edu.caltech.lncrna.bio.annotation.BlockedAnnotation.BlockedBuilder;
+import edu.caltech.lncrna.bio.annotation.Annotation.AnnotationBuilder;
 import edu.caltech.lncrna.bio.annotation.Strand;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
@@ -35,8 +35,8 @@ public final class SingleReadAlignment extends SamRecordImpl implements Alignmen
 
         int start = samRecord.getAlignmentStart();
         Strand strand = isOnReverseStrand() ? Strand.NEGATIVE : Strand.POSITIVE;
-        annot = (new BlockedBuilder())
-                .addBlocksFromCigar(samRecord.getCigar(), ref, start, strand)
+        annot = (new AnnotationBuilder())
+                .addAnnotationFromCigar(samRecord.getCigar(), ref, start, strand)
                 .build();
         assert annot.getEnd() == samRecord.getAlignmentEnd() + 1:
             "BlockedAnnotation is not consistant with SAMRecord.";
@@ -81,6 +81,11 @@ public final class SingleReadAlignment extends SamRecordImpl implements Alignmen
     public Strand getStrand() {
         return annot.getStrand();
     }
+    
+    @Override
+    public int[] getBlockBoundaries() {
+        return annot.getBlockBoundaries();
+    }
 
     @Override
     public int getNumberOfBlocks() {
@@ -110,6 +115,16 @@ public final class SingleReadAlignment extends SamRecordImpl implements Alignmen
     @Override
     public boolean isAdjacentTo(Annotated other) {
         return annot.isAdjacentTo(other);
+    }
+    
+    @Override
+    public boolean isUpstreamOf(Annotated other) {
+        return annot.isUpstreamOf(other);
+    }
+
+    @Override
+    public boolean isDownstreamOf(Annotated other) {
+        return annot.isDownstreamOf(other);
     }
 
     @Override
@@ -184,4 +199,5 @@ public final class SingleReadAlignment extends SamRecordImpl implements Alignmen
     public String toString() {
         return annot.toString();
     }
+    
 }

@@ -1,4 +1,4 @@
-package edu.caltech.lncrna.bio.testing;
+/*package edu.caltech.lncrna.bio.testing;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -140,4 +140,4 @@ public class TestBlockedAnnotation {
         assertThat(annot1.equals(annot2), is(false));
     }
     
-}
+}*/
