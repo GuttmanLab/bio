@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import edu.caltech.lncrna.bio.annotation.Annotated;
 import edu.caltech.lncrna.bio.utils.FilteredIterator;
@@ -76,7 +78,7 @@ public class GenomeTree<T extends Annotated> implements Iterable<T> {
      * given <code>Annotated</code> object.
      * @param a - the given <code>Annotated</code> object
      */
-    public Iterator<T> getHullOverlappers(Annotated a) {
+    public Iterator<T> getGeneBodyOverlappers(Annotated a) {
         IntervalSetTree<T> tree = chroms.get(a.getReferenceName());
         
         if (tree == null) {
@@ -114,14 +116,18 @@ public class GenomeTree<T extends Annotated> implements Iterable<T> {
         return getOverlappers(a).hasNext();
     }
     
-    public boolean anyHullOverlaps(Annotated a) {
-        return getHullOverlappers(a).hasNext();
+    public boolean anyGeneBodyOverlaps(Annotated a) {
+        return getGeneBodyOverlappers(a).hasNext();
     }
 
 
     @Override
     public Iterator<T> iterator() {
         return new TreeIterator(chroms);
+    }
+    
+    public Stream<T> stream() {
+        return StreamSupport.stream(spliterator(), false);
     }
     
     private class ChromosomeIterator implements Iterator<IntervalSetTree<T>> {
