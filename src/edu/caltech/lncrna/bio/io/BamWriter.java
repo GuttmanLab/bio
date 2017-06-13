@@ -3,7 +3,6 @@ package edu.caltech.lncrna.bio.io;
 import java.nio.file.Path;
 import java.util.Objects;
 
-import edu.caltech.lncrna.bio.alignment.PairedSamRecord;
 import edu.caltech.lncrna.bio.alignment.SamRecord;
 import edu.caltech.lncrna.bio.alignment.CoordinateSpace;
 import htsjdk.samtools.SAMFileWriter;
@@ -23,10 +22,6 @@ public class BamWriter implements AutoCloseable {
     }
     
     public void addAlignment(SamRecord record) {
-        record.writeTo(writer);
-    }
-    
-    public void addAlignment(PairedSamRecord record) {
         record.writeTo(writer);
     }
 

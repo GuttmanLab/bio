@@ -73,6 +73,10 @@ public class Gene extends Annotation {
         return intersect(cds);
     }
     
+    public static GeneBuilder builder() {
+        return new GeneBuilder();
+    }
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) {

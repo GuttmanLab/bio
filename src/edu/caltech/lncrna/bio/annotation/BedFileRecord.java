@@ -218,6 +218,10 @@ public final class BedFileRecord extends Gene implements AnnotationFileRecord {
         return rtrn;
     }
     
+    public static BedBuilder builder() {
+        return new BedBuilder();
+    }
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) {

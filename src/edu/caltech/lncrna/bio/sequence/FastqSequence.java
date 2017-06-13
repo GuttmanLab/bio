@@ -2,7 +2,7 @@ package edu.caltech.lncrna.bio.sequence;
 
 import java.util.Objects;
 
-import edu.caltech.lncrna.bio.alignment.SamRecord;
+import edu.caltech.lncrna.bio.alignment.SingleSamRecord;
 
 /**
  * This class represents sequences from a FASTQ file.
@@ -67,7 +67,7 @@ public final class FastqSequence extends FastaSequence {
         this(name, seq, quality, DEFAULT_PHRED_ENCODING);
     }
     
-    public FastqSequence(SamRecord record) {
+    public FastqSequence(SingleSamRecord record) {
         this(record.getName(), record.getBases(), record.getQualities());
     }
     

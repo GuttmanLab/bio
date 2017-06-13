@@ -364,6 +364,10 @@ public class Annotation implements Annotated {
         return rtrnEndpoints.stream().mapToInt(i -> i).toArray();
     }
     
+    public static AnnotationBuilder builder() {
+        return new AnnotationBuilder();
+    }
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) {

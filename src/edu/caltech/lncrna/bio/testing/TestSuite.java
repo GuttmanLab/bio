@@ -21,6 +21,7 @@ import org.junit.runners.Suite;
     
     // io package
     TestPairedEndBamParser.class,
+    TestSingleReadBamParser.class,
     
     // sequence package
     TestSequences.class

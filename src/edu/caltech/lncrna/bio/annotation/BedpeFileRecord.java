@@ -228,6 +228,10 @@ public final class BedpeFileRecord implements AnnotationFileRecord {
         return bb.build();
     }
     
+    public static BedpeBuilder builder() {
+        return new BedpeBuilder();
+    }
+    
     @Override
     public boolean equals(Object o) {
         if (this == o) {

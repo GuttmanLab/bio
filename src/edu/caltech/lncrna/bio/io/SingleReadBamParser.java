@@ -12,9 +12,6 @@ import edu.caltech.lncrna.bio.annotation.Annotation;
 import edu.caltech.lncrna.bio.utils.CloseableFilteredIterator;
 import edu.caltech.lncrna.bio.utils.CloseableIterator;
 import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
 
 public final class SingleReadBamParser extends BamParser<SingleRead> {
     
@@ -35,11 +32,6 @@ public final class SingleReadBamParser extends BamParser<SingleRead> {
         Predicate<SingleRead> pred = x -> x.getAlignment().isPresent() &&
                 x.getAlignment().get().overlaps(overlappingAnnotation);
         iterator = new CloseableFilteredIterator<SingleRead>(samIterator, pred);
-    }
-    
-    private SamReader getSamReaderFromPath(Path p) {
-        return SamReaderFactory.makeDefault()
-                .validationStringency(ValidationStringency.SILENT).open(p);
     }
 
     @Override
@@ -69,7 +61,7 @@ public final class SingleReadBamParser extends BamParser<SingleRead> {
         return getAlignmentStream().iterator();
     }
     
-    public class SingleReadIterator implements CloseableIterator<SingleRead> {
+    public final class SingleReadIterator implements CloseableIterator<SingleRead> {
         
         protected SAMRecordIterator underlyingIterator;
 

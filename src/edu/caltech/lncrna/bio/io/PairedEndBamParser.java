@@ -18,26 +18,20 @@ import edu.caltech.lncrna.bio.utils.CloseableIterator;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
 
-public class PairedEndBamParser extends BamParser<ReadPair> {
+public final class PairedEndBamParser extends BamParser<ReadPair> {
     
     private final CloseableIterator<ReadPair> iterator;
 
     public PairedEndBamParser(Path p) {
         super(p);
-        SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault()
-                .validationStringency(ValidationStringency.SILENT);
-        SamReader samReader = samReaderFactory.open(p.toFile());
+        SamReader samReader = getSamReaderFromPath(p);
         iterator = new PairedEndIterator(samReader.iterator());
     }
     
     public PairedEndBamParser(Path p, Annotation overlappingAnnotation) {
         super(p);
-        SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault()
-                .validationStringency(ValidationStringency.SILENT);
-        SamReader samReader = samReaderFactory.open(p.toFile());
+        SamReader samReader = getSamReaderFromPath(p);
         PairedEndIterator underlyingIterator = new PairedEndIterator(
                 samReader.queryOverlapping(overlappingAnnotation.getReferenceName(),
                                            overlappingAnnotation.getStart(),
@@ -74,7 +68,7 @@ public class PairedEndBamParser extends BamParser<ReadPair> {
         return getAlignmentStream().iterator();
     }
     
-    public class PairedEndIterator implements CloseableIterator<ReadPair> {
+    public final class PairedEndIterator implements CloseableIterator<ReadPair> {
 
         private final SAMRecordIterator underlyingIterator;
         private final Map<String, SingleRead> unpairedCache;

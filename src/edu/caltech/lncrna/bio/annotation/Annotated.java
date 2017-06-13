@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import edu.caltech.lncrna.bio.annotation.Annotation.AnnotationBuilder;
 import edu.caltech.lncrna.bio.datastructures.Interval;
 
 /**
