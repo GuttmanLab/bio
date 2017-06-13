@@ -2,6 +2,7 @@ package edu.caltech.lncrna.bio.alignment;
 
 import java.util.Optional;
 
+import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMFileWriter;
 import edu.caltech.lncrna.bio.sequence.Sequence;
 
@@ -11,7 +12,7 @@ import edu.caltech.lncrna.bio.sequence.Sequence;
  * The <code>SamRecord</code> interface provides methods to get information
  * guaranteed to exist by the SAM format specification.
  */
-public interface SamRecord extends Sequence {
+public interface SingleSamRecord extends SamRecord, Sequence {
     
     /**
      * If this read is paired.
@@ -85,17 +86,16 @@ public interface SamRecord extends Sequence {
      */
     public int getMappingQuality();
     
+    // TODO Javadoc
+    public Cigar getCigar();
+    
+    public String getCigarString();
+    
     /**
      * Returns the MD tag of this read as an <code>Optional</code>, if it exists;
      * otherwise, an empty <code>Optional</code>.
      */
     public Optional<String> getMdTag();
-    
-    /**
-     * Adds this read to a <code>SAMFileWriter</code> to be written to disk.
-     * @param writer - the writer to add this read to
-     */
-    public void writeTo(SAMFileWriter writer);
     
     public byte[] getQualities();
 }

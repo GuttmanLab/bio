@@ -2,6 +2,8 @@ package edu.caltech.lncrna.bio.alignment;
 
 import java.util.Optional;
 
+import edu.caltech.lncrna.bio.annotation.Annotated;
+
 /**
  * This interface defines the behavior of objects that have been mapped,
  * successfully or unsuccessfully, to a reference.
@@ -16,7 +18,7 @@ import java.util.Optional;
  * represents; in practical terms, the type of object returned by
  * <code>getAlignment</code> (after unwrapping the <code>Optional</code>)
  */
-public interface Aligned<T extends Alignment> {
+public interface Aligned<T extends Annotated> extends SamRecord {
 
     /**
      * If this has a valid alignment.

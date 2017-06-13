@@ -1,9 +1,9 @@
 package edu.caltech.lncrna.bio.alignment;
 
 import edu.caltech.lncrna.bio.annotation.Annotated;
+import edu.caltech.lncrna.bio.sequence.Base;
 
-/**
- * Objects that implement the <code>Aligned</code> interface have been
- * successfully aligned to a reference.
- */
-public interface Alignment extends Annotated { }
+public interface Alignment extends Annotated, SamRecord {
+
+    public Base getReadBaseFromReferencePosition(String chrom, int pos);
+}

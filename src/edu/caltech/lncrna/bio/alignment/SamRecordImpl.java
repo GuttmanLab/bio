@@ -11,7 +11,7 @@ import htsjdk.samtools.SAMRecord;
  * As currently implemented, this class is a simple wrapper class for the
  * <code>SAMRecord</code> class in the htsjdk library.
  */
-public abstract class SamRecordImpl implements SamRecord {
+public abstract class SamRecordImpl implements SingleSamRecord {
     
     protected final SAMRecord samRecord;
 

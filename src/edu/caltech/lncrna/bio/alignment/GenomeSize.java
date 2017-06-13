@@ -13,9 +13,11 @@ public final class GenomeSize {
     public static final Map<String, Integer> MM9;
     public static final Map<String, Integer> MM10;
     public static final Map<String, Integer> HG19;
+    
+    private GenomeSize() { }
 
     static {
-        Map<String, Integer> mm9Map = new HashMap<String, Integer>();
+        Map<String, Integer> mm9Map = new HashMap<>();
         mm9Map.put("chr1", 197195432);
         mm9Map.put("chr2", 181748087);
         mm9Map.put("chr3", 159599783);
@@ -42,7 +44,7 @@ public final class GenomeSize {
     }
     
     static {
-        Map<String, Integer> mm10Map = new HashMap<String, Integer>();
+        Map<String, Integer> mm10Map = new HashMap<>();
         mm10Map.put("chr1", 195471971);
         mm10Map.put("chr2", 182113224);
         mm10Map.put("chr3", 160039680);
@@ -69,7 +71,7 @@ public final class GenomeSize {
     }
     
     static {
-        Map<String, Integer> hg19Map = new HashMap<String, Integer>();
+        Map<String, Integer> hg19Map = new HashMap<>();
         hg19Map.put("chr1", 249250621);
         hg19Map.put("chr2", 243199373);
         hg19Map.put("chr3", 198022430);

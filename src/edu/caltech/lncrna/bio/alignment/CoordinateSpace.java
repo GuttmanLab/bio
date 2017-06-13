@@ -41,11 +41,13 @@ public final class CoordinateSpace {
      * @param bamFilePath - the <code>Path</code> to the BAM file
      * @throws IOException
      */
-    public CoordinateSpace(Path bamFilePath) throws IOException {
+    public CoordinateSpace(Path bamFilePath) {
         SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault()
                 .validationStringency(ValidationStringency.SILENT);
         try (SamReader samReader = samReaderFactory.open(bamFilePath.toFile())) {
             this.refSizes = getRefSeqLengthsFromSamHeader(samReader.getFileHeader());
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
         }
     }
     

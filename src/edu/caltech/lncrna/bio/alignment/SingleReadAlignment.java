@@ -1,12 +1,13 @@
 package edu.caltech.lncrna.bio.alignment;
 
-import java.util.Iterator;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
 
-import edu.caltech.lncrna.bio.annotation.Annotated;
-import edu.caltech.lncrna.bio.annotation.Annotation.AnnotationBuilder;
+import edu.caltech.lncrna.bio.annotation.Annotation;
 import edu.caltech.lncrna.bio.annotation.Strand;
+import edu.caltech.lncrna.bio.sequence.Base;
+import htsjdk.samtools.Cigar;
+import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
 
@@ -14,19 +15,16 @@ import htsjdk.samtools.SAMRecord;
  * This class represents a single read from a SAM file for which a valid
  * alignment has been found.
  */
-public final class SingleReadAlignment extends SamRecordImpl implements Alignment {
+public final class SingleReadAlignment extends Annotation
+implements Alignment, SingleSamRecord {
 
-    private final Annotated annot;
+    protected final SAMRecord samRecord;
     
-    /**
-     * Constructs an instance of a <code>SingleReadAligment</code> from an
-     * htsjdk <code>SAMRecord</code> object.
-     * @throws IllegalArgumentException if the input SAM record is not aligned.
-     */
-    public SingleReadAlignment(SAMRecord samRecord) {
-        super(samRecord);
-        
-        if (!isMapped()) {
+    public static SingleReadAlignment newInstance(SAMRecord samRecord) {
+        Objects.requireNonNull(samRecord,
+                "Null SAM record passed to factory constructor.");
+
+        if (samRecord.getReadUnmappedFlag()) {
             throw new IllegalArgumentException("Attempted to construct " +
                     "SingleReadAlignment from unmapped SAMRecord.");
         }
@@ -34,141 +32,163 @@ public final class SingleReadAlignment extends SamRecordImpl implements Alignmen
         String ref = samRecord.getReferenceName();
 
         int start = samRecord.getAlignmentStart();
-        Strand strand = isOnReverseStrand() ? Strand.NEGATIVE : Strand.POSITIVE;
-        annot = (new AnnotationBuilder())
+        Strand strand = samRecord.getReadNegativeStrandFlag()
+                ? Strand.NEGATIVE
+                : Strand.POSITIVE;
+        Annotation annot = (new AnnotationBuilder())
                 .addAnnotationFromCigar(samRecord.getCigar(), ref, start, strand)
                 .build();
         assert annot.getEnd() == samRecord.getAlignmentEnd() + 1:
             "BlockedAnnotation is not consistant with SAMRecord.";
+        
+        return new SingleReadAlignment(annot, samRecord);
     }
-
-    @Override
-    public String getReferenceName() {
-        return annot.getReferenceName();
-    }
-
-    @Override
-    public int getStart() {
-        return annot.getStart();
-    }
-
-    @Override
-    public int getEnd() {
-        return annot.getEnd();
+    
+    private SingleReadAlignment(Annotation annot, SAMRecord samRecord) {
+        super(annot);
+        Objects.requireNonNull(samRecord, "Null SAM record passed to constructor.");
+        this.samRecord = samRecord;
     }
     
     @Override
-    public int getFivePrimePosition() {
-        return annot.getFivePrimePosition();
-    }
-    
-    @Override
-    public int getThreePrimePosition() {
-        return annot.getThreePrimePosition();
-    }
+    public Base getReadBaseFromReferencePosition(String chrom, int pos) {
 
-    @Override
-    public int getSize() {
-        return annot.getSize();
-    }
+        Annotation interval = new Annotation(chrom, pos, pos + 1, Strand.BOTH);
+        if (!overlaps(interval)) {
+            return Base.INVALID;
+        }
+        
+        int refIdx = getStart();
+        int readIdx = 0;
+        
+        CigarIterator ops = new CigarIterator(samRecord.getCigar());
+        while (ops.hasNext()) {
+            CigarOperator op = ops.next();
+            
+            if (refIdx >= pos && op.consumesReferenceBases()) {
+                if (op.equals(CigarOperator.DELETION) ||
+                        op.equals(CigarOperator.SKIPPED_REGION)) {
+                    return Base.INVALID;
+                } else {
+                    return Base.of(getBases().charAt(readIdx));
+                }
+            }
+            
+            if (op.consumesReadBases()) {
+                readIdx++;
+            }
 
-    @Override
-    public int getSpan() {
-        return annot.getSpan();
-    }
-
-    @Override
-    public Strand getStrand() {
-        return annot.getStrand();
-    }
-    
-    @Override
-    public int[] getBlockBoundaries() {
-        return annot.getBlockBoundaries();
-    }
-
-    @Override
-    public int getNumberOfBlocks() {
-        return annot.getNumberOfBlocks();
-    }
-
-    @Override
-    public Iterator<Annotated> iterator() {
-        return getBlockIterator();
-    }
-    
-    @Override
-    public Iterator<Annotated> getBlockIterator() {
-        return annot.getBlockIterator();
-    }
-
-    @Override
-    public Stream<Annotated> getBlockStream() {
-        return annot.getBlockStream();
-    }
-
-    @Override
-    public boolean overlaps(Annotated other) {
-        return annot.overlaps(other);
-    }
-
-    @Override
-    public boolean isAdjacentTo(Annotated other) {
-        return annot.isAdjacentTo(other);
-    }
-    
-    @Override
-    public boolean isUpstreamOf(Annotated other) {
-        return annot.isUpstreamOf(other);
-    }
-
-    @Override
-    public boolean isDownstreamOf(Annotated other) {
-        return annot.isDownstreamOf(other);
-    }
-
-    @Override
-    public Annotated getBody() {
-        return annot.getBody();
-    }
-
-    @Override
-    public Optional<Annotated> minus(Annotated other) {
-        return annot.minus(other);
-    }
-
-    @Override
-    public Optional<Annotated> intersect(Annotated other) {
-        return annot.intersect(other);
-    }
-
-    @Override
-    public boolean contains(Annotated other) {
-        return annot.contains(other);
-    }
-    
-    @Override
-    public Optional<Annotated> getIntrons() {
-        return annot.getIntrons();
-    }
-
-    @Override
-    public Iterator<Annotated> getIntronIterator() {
-        return annot.getIntronIterator();
-    }
-
-    @Override
-    public Stream<Annotated> getIntronStream() {
-        return annot.getIntronStream();
-    }
-    
-    public String getCigarString() {
-        return samRecord.getCigarString();
+            if (op.consumesReferenceBases()) {
+                refIdx++;
+            }
+        }
+        
+        return Base.INVALID;
     }
 
     @Override
     public void writeTo(SAMFileWriter writer) {
         writer.addAlignment(samRecord);
+    }
+
+    @Override
+    public String getName() {
+        return samRecord.getReadName();
+    }
+    
+    @Override
+    public String getBases() {
+        return samRecord.getReadString();
+    }
+    
+    @Override
+    public int length() {
+        return getBases().length();
+    }
+
+    @Override
+    public boolean isPaired() {
+        return samRecord.getReadPairedFlag();
+    }
+    
+    @Override
+    public boolean isMappedInProperPair() {
+        return samRecord.getProperPairFlag();
+    }
+    
+    @Override
+    public boolean isMapped() {
+        return !samRecord.getReadUnmappedFlag();
+    }
+    
+    @Override
+    public boolean hasMappedMate() {
+        return !samRecord.getMateUnmappedFlag();
+    }
+    
+    @Override
+    public boolean isOnReverseStrand() {
+        return samRecord.getReadNegativeStrandFlag();
+    }
+    
+    @Override
+    public boolean hasMateOnReverseStrand() {
+        return samRecord.getMateNegativeStrandFlag();
+    }
+    
+    @Override
+    public boolean isFirstInPair() {
+        return samRecord.getFirstOfPairFlag();
+    }
+    
+    @Override
+    public boolean isSecondInPair() {
+        return samRecord.getSecondOfPairFlag();
+    }
+    
+    @Override
+    public boolean isPrimaryAlignment() {
+        return !samRecord.getNotPrimaryAlignmentFlag();
+    }
+    
+    @Override
+    public boolean passesQualityChecks() {
+        return !samRecord.getReadFailsVendorQualityCheckFlag();
+    }
+    
+    @Override
+    public boolean isDuplicate() {
+        return samRecord.getDuplicateReadFlag();
+    }
+    
+    @Override
+    public boolean isSupplementaryAlignment() {
+        return samRecord.getSupplementaryAlignmentFlag();
+    }
+    
+    @Override
+    public int getMappingQuality() {
+        return samRecord.getMappingQuality();
+    }
+    
+    @Override
+    public Cigar getCigar() {
+        return samRecord.getCigar();
+    }
+    
+    @Override
+    public String getCigarString() {
+        return samRecord.getCigarString();
+    }
+    
+    @Override
+    public Optional<String> getMdTag() {
+        return Optional.ofNullable(samRecord.getStringAttribute("MD"));
+    }
+    
+    @Override
+    public byte[] getQualities() {
+        return samRecord.getBaseQualities();
     }
     
     @Override
@@ -183,21 +203,18 @@ public final class SingleReadAlignment extends SamRecordImpl implements Alignmen
         
         SingleReadAlignment other = (SingleReadAlignment) o;
         
-        return samRecord.equals(other.samRecord) &&
-               annot.equals(other.annot);
+        return samRecord.equals(other.samRecord) && super.equals(other);
     }
     
     @Override
     public int hashCode() {
-        int hashCode = 17;
+        int hashCode = super.hashCode();
         hashCode = 37 * hashCode + samRecord.hashCode();
-        hashCode = 37 * hashCode + annot.hashCode();
         return hashCode;
     }
     
     @Override
     public String toString() {
-        return annot.toString();
+        return super.toString();
     }
-    
 }
