@@ -61,7 +61,13 @@ public class ReadPair implements PairedSamRecord, Aligned<PairedEndAlignment> {
         Optional<SingleReadAlignment> align1 = read1.getAlignment();
         Optional<SingleReadAlignment> align2 = read2.getAlignment();
         if (align1.isPresent() && align2.isPresent()) {
-            return align1.get().getReferenceName().equals(align2.get().getReferenceName());
+            SingleReadAlignment a1 = align1.get();
+            SingleReadAlignment a2 = align2.get();
+            boolean onSameReference = a1.getReferenceName()
+                    .equals(a2.getReferenceName());
+            boolean isConcordant = PairOrientation.getPairOrientation(a1, a2)
+                    .isConcordant();
+            return onSameReference && isConcordant;
         }
         return false;
     }
@@ -75,7 +81,7 @@ public class ReadPair implements PairedSamRecord, Aligned<PairedEndAlignment> {
         Optional<SingleReadAlignment> align2 = read2.getAlignment();
         assert align1.isPresent() : "align1 is empty";
         assert align2.isPresent() : "align2 is empty";
-        return Optional.of(new PairedEndAlignment(align1.get(), align2.get()));
+        return Optional.of(PairedEndAlignment.newInstance(align1.get(), align2.get()));
     }
 
     @Override
