@@ -4,10 +4,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-/**
- * 
- * @param <T>
- */
 public class Window<T extends Annotated>
 extends Annotation implements Populated<T>, Scored {
 

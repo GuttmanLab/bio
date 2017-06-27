@@ -60,6 +60,10 @@ extends Annotation implements Alignment, PairedSamRecord {
         read2 = align2;
     }
     
+    /**
+     * Returns the <code>PairOrientation</code> of this
+     * <code>PairedEndAlignment</code>.
+     */
     public PairOrientation getPairOrientation() {
         return PairOrientation.getPairOrientation(read1, read2);
     }
@@ -100,6 +104,13 @@ extends Annotation implements Alignment, PairedSamRecord {
         return 0;
     } 
     
+    /**
+     * Returns the insert of this <code>PairedEndAlignment</code>.
+     * <p>
+     * Returns an <code>Annotated</code> object representing the insert of
+     * this, if it exists, wrapped in an <code>Optional</code>. Otherwise,
+     * returns an empty <code>Optional</code> instance.
+     */
     public Optional<Annotated> getInsert() {
         int read1Start = read1.getStart();
         int read2Start = read2.getStart();
@@ -117,9 +128,9 @@ extends Annotation implements Alignment, PairedSamRecord {
     }
     
     @Override
-    public Base getReadBaseFromReferencePosition(String chrom, int pos) {
-        Base base1 = read1.getReadBaseFromReferencePosition(chrom, pos);
-        Base base2 = read2.getReadBaseFromReferencePosition(chrom, pos);
+    public Base getReadBaseFromReferencePosition(int pos) {
+        Base base1 = read1.getReadBaseFromReferencePosition(pos);
+        Base base2 = read2.getReadBaseFromReferencePosition(pos);
         
         if (base1.equals(base2)) {
             return base1;
@@ -134,6 +145,11 @@ extends Annotation implements Alignment, PairedSamRecord {
         }
         
         return Base.CONFLICTING;
+    }
+    
+    @Override
+    public boolean isSpliced() {
+        return read1.isSpliced() || read2.isSpliced();
     }
     
     @Override

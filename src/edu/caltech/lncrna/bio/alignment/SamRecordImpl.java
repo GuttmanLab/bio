@@ -16,7 +16,8 @@ public abstract class SamRecordImpl implements SingleSamRecord {
     protected final SAMRecord samRecord;
 
     /**
-     * Constructs an instance from an htsjdk <code>SAMRecord</code> object.
+     * Constructs a <code>SamRecordImpl</code> object from an htsjdk
+     * <code>SAMRecord</code> object.
      * @param samRecord - the SAM record backing up this object
      */
     public SamRecordImpl(SAMRecord samRecord) {

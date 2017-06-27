@@ -20,9 +20,9 @@ import htsjdk.samtools.ValidationStringency;
  */
 public final class CoordinateSpace {
 
-    public static CoordinateSpace MM9 = new CoordinateSpace(GenomeSize.MM9);
-    public static CoordinateSpace MM10 = new CoordinateSpace(GenomeSize.MM10);
-    public static CoordinateSpace HG19 = new CoordinateSpace(GenomeSize.HG19);
+    public final static CoordinateSpace MM9 = new CoordinateSpace(GenomeSize.MM9);
+    public final static CoordinateSpace MM10 = new CoordinateSpace(GenomeSize.MM10);
+    public final static CoordinateSpace HG19 = new CoordinateSpace(GenomeSize.HG19);
 
     private final Map<String, Integer> refSizes;
 
@@ -39,7 +39,7 @@ public final class CoordinateSpace {
      * Extracts the header from the given BAM file and constructs a <code>
      * CoordinateSpace</code> from it.
      * @param bamFilePath - the <code>Path</code> to the BAM file
-     * @throws IOException
+     * @throws RuntimeException if an I/O operation fails or is interrupted
      */
     public CoordinateSpace(Path bamFilePath) {
         SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault()

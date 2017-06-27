@@ -11,7 +11,6 @@ import org.junit.rules.ExpectedException;
 
 import edu.caltech.lncrna.bio.annotation.Annotated;
 import edu.caltech.lncrna.bio.annotation.Annotation;
-import edu.caltech.lncrna.bio.annotation.Annotation.AnnotationBuilder;
 import edu.caltech.lncrna.bio.annotation.Strand;
 
 public class TestAnnotation {
@@ -73,7 +72,7 @@ public class TestAnnotation {
     
     @Test
     public void testAnnotationEqualityIdentity() {
-        Annotated b = (new AnnotationBuilder())
+        Annotated b = Annotation.builder()
                 .addAnnotation(new Annotation("chr1", 100, 200, Strand.POSITIVE))
                 .addAnnotation(new Annotation("chr1", 300, 400, Strand.POSITIVE))
                 .build();
@@ -88,11 +87,11 @@ public class TestAnnotation {
     
     @Test
     public void testAnnotationEqualityPositive() {
-        Annotated b1 = (new AnnotationBuilder())
+        Annotated b1 = Annotation.builder()
                 .addAnnotation(new Annotation("chr1", 100, 200, Strand.POSITIVE))
                 .addAnnotation(new Annotation("chr1", 300, 400, Strand.POSITIVE))
                 .build();
-        Annotated b2 = (new AnnotationBuilder())
+        Annotated b2 = Annotation.builder()
                 .addAnnotation(new Annotation("chr1", 100, 200, Strand.POSITIVE))
                 .addAnnotation(new Annotation("chr1", 300, 400, Strand.POSITIVE))
                 .build();
@@ -101,11 +100,11 @@ public class TestAnnotation {
     
     @Test
     public void testAnnotationEqualityNonmatchingReference() {
-        Annotated b1 = (new AnnotationBuilder())
+        Annotated b1 = Annotation.builder()
                 .addAnnotation(new Annotation("chr1", 100, 200, Strand.POSITIVE))
                 .addAnnotation(new Annotation("chr1", 300, 400, Strand.POSITIVE))
                 .build();
-        Annotated b2 = (new AnnotationBuilder())
+        Annotated b2 = Annotation.builder()
                 .addAnnotation(new Annotation("chr2", 100, 200, Strand.POSITIVE))
                 .addAnnotation(new Annotation("chr2", 300, 400, Strand.POSITIVE))
                 .build();
@@ -114,11 +113,11 @@ public class TestAnnotation {
     
     @Test
     public void testAnnotationEqualityNonmatchingBlocks() {
-        Annotated b1 = (new AnnotationBuilder())
+        Annotated b1 = Annotation.builder()
                 .addAnnotation(new Annotation("chr1", 100, 200, Strand.POSITIVE))
                 .addAnnotation(new Annotation("chr1", 300, 401, Strand.POSITIVE))
                 .build();
-        Annotated b2 = (new AnnotationBuilder())
+        Annotated b2 = Annotation.builder()
                 .addAnnotation(new Annotation("chr1", 100, 200, Strand.POSITIVE))
                 .addAnnotation(new Annotation("chr1", 300, 400, Strand.POSITIVE))
                 .build();
@@ -127,11 +126,11 @@ public class TestAnnotation {
     
     @Test
     public void testAnnotationEqualityNonmatchingStrand() {
-        Annotated b1 = (new AnnotationBuilder())
+        Annotated b1 = Annotation.builder()
                 .addAnnotation(new Annotation("chr1", 100, 200, Strand.POSITIVE))
                 .addAnnotation(new Annotation("chr1", 300, 400, Strand.POSITIVE))
                 .build();
-        Annotated b2 = (new AnnotationBuilder())
+        Annotated b2 = Annotation.builder()
                 .addAnnotation(new Annotation("chr1", 100, 200, Strand.NEGATIVE))
                 .addAnnotation(new Annotation("chr1", 300, 400, Strand.NEGATIVE))
                 .build();
@@ -140,7 +139,7 @@ public class TestAnnotation {
     
     @Test
     public void testAnnotationEqualityFromBuilder() {
-        Annotated b1 = (new AnnotationBuilder())
+        Annotated b1 = Annotation.builder()
                 .addAnnotation(new Annotation("chr1", 100, 200, Strand.POSITIVE))
                 .build();
         Annotated b2 = new Annotation("chr1", 100, 200, Strand.POSITIVE);

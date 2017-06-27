@@ -2,19 +2,18 @@ package edu.caltech.lncrna.bio.sequence;
 
 import java.util.Objects;
 
-import edu.caltech.lncrna.bio.annotation.AnnotationFileRecord;
-
 /**
  * This class represents sequences from a FASTA file.
  */
-public class FastaSequence implements Sequence, AnnotationFileRecord {
+public class FastaSequence implements Sequence {
 
     protected final String sequence;
     protected final String name;
-    protected static final String nl = System.getProperty("line.separator");
     
     /**
-     * Constructs an instance of a <code>FastaSequence</code> from a name and a string of bases.
+     * Constructs an instance of a <code>FastaSequence</code> from a name and a
+     * string of bases.
+     * 
      * @param name - the name of this <code>FastaSequence</code>
      * @param seq - the bases of this <code>FastaSequence</code>
      * @throws NullPointerException if either argument is null.
@@ -35,35 +34,42 @@ public class FastaSequence implements Sequence, AnnotationFileRecord {
     public String getName() {
         return name;
     }
-    
-    /**
-     * Returns a <code>FastaSequence</code> with the same sequence but a new name.
-     * <p>
-     * This method does not mutate any member variables, but instead constructs a
-     * new <code>FastaSequence</code>.
-     * @param name - the new name
-     * @return a new <code>FastaSequence</code> with the given name
-     */
+
+    @Override
     public FastaSequence changeName(String name) {
         return new FastaSequence(name, sequence);
     }
     
+    @Override
     public FastaSequence complement() {
         return complement(name);
     }
     
+    @Override
     public FastaSequence complement(String name) {
         return new FastaSequence(name, Sequences.complement(sequence));
     }
     
+    @Override
     public FastaSequence reverseComplement() {
         return reverseComplement(name);
     }
     
+    @Override
     public FastaSequence reverseComplement(String name) {
         return new FastaSequence(name, Sequences.reverseComplement(sequence));
     }
     
+    /**
+     * Returns a subsequence of this with the given start and end.
+     * <p>
+     * Intervals are half-open. The base at the start coordinate will be
+     * included. The base at the end coordinate will not.
+     * 
+     * @param start - the start coordinate
+     * @param end - the end coordinate
+     * @return a subsequence from <code>start</code> to <code>end</code>
+     */
     public FastaSequence subsequence(int start, int end) {
         return subsequence(name, start, end);
     }
@@ -73,28 +79,7 @@ public class FastaSequence implements Sequence, AnnotationFileRecord {
                         Math.min(end, sequence.length()));
         return new FastaSequence(name, subseq);
     }
-    
-    @Override
-    public int length() {
-        return sequence.length();
-    }
-    
-    /**
-     * If this sequence is a poly-A sequence.
-     * <p>
-     * A sequence is a poly-A sequence if all of its bases are 'A', or if all
-     * of its bases are 'T'. The check is not case-sensitive.
-     */
-    public boolean isPolyA() {
-        return sequence.chars().allMatch(c -> c == 'a' || c == 'A') ||
-               sequence.chars().allMatch(c -> c == 't' || c == 'T');
-    }
-    
-    public String toFasta() {
-        return ">" + name + nl + sequence + nl;
-    }
-    
-    @Override
+
     public String toFormattedString() {
         return toFasta();
     }

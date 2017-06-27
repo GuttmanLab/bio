@@ -24,15 +24,15 @@ import java.util.stream.IntStream;
  * </pre>
  * Unspecified fields will have sensible defaults.
  */
-public final class BedFileRecord extends Gene implements AnnotationFileRecord {
+public final class BedFileRecord extends Gene {
 
     private final double score;
     private final Color color;
     
-    private final static double DEFAULT_SCORE = 0;
-    private final static Color DEFAULT_COLOR = Color.BLACK;
-    private static final int[] VALID_NUM_FIELDS = new int[] {3, 4, 5, 6, 8, 9, 12};
-    private static final int MAX_FIELDS = 12;
+    protected static final double DEFAULT_SCORE = 0;
+    protected static final Color DEFAULT_COLOR = Color.BLACK;
+    protected static final int[] VALID_NUM_FIELDS = new int[] {3, 4, 5, 6, 8, 9, 12};
+    protected static final int MAX_FIELDS = 12;
     
     protected BedFileRecord(BedBuilder b) {
         super(b);
@@ -52,72 +52,6 @@ public final class BedFileRecord extends Gene implements AnnotationFileRecord {
      */
     public Color getColor() {
         return color;
-    }
-
-    /**
-     * Converts this to a properly formatted <code>String</code> suitable for
-     * outputting directly to a file.
-     * <p>
-     * Most fields in a BED file are optional. Use the <code>numFields</code>
-     * parameter to specify the number of fields contained in the returned
-     * <code>String</code>.
-     * @param numFields - the number of fields to output
-     * @throws IllegalArgumentException if <code>numFields</code> is not 3, 4,
-     * 5, 6, 8, 9 or 12. Other values are not allowed by the BED format.
-     */
-    public String toFormattedString(int numFields) {
-        if (IntStream.of(VALID_NUM_FIELDS).noneMatch(x -> x == numFields)) {
-            throw new IllegalArgumentException("Attempted to convert BED " + 
-                    "record to string, but requested numFields " + numFields
-                    + ". Number of fields must be either 3, 4, 5, 6, 8, 9 " + 
-                    "12.");
-        }
-        
-        // Required fields
-        final StringBuilder sb = new StringBuilder();
-        sb.append(ref + "\t" + getStart() + "\t" + getEnd());
-        if (numFields == 3) return sb.toString();
-        
-        // Name
-        String bedName = name.isEmpty() ? "." : name;
-        sb.append("\t" + bedName);
-        if (numFields == 4) return sb.toString();
-        
-        // Score
-        sb.append("\t" + score);
-        if (numFields == 5) return sb.toString();
-        
-        // Strand
-        sb.append("\t" + strand.toString());
-        if (numFields == 6) return sb.toString();
-        
-        // Thick
-        sb.append("\t" + cdsStartPos + "\t" + cdsEndPos);
-        if (numFields == 8) return sb.toString();
-        
-        sb.append("\t" + color.getRed() + "," + color.getGreen() + "," +
-                color.getBlue());
-        if (numFields == 9) return sb.toString();
-        
-        sb.append("\t" + getNumberOfBlocks() + "\t");
-        Iterator<Annotated> blocks = getBlockIterator();
-        while (blocks.hasNext()) {
-            Annotated block = blocks.next();
-            sb.append(block.getSize() + ","); // trailing comma after last block is OK
-        }
-        sb.append("\t");
-        blocks = getBlockIterator();
-        while (blocks.hasNext()) {
-            Annotated block = blocks.next();
-            sb.append((block.getStart() - getStart()) + ","); // trailing comma after last is OK
-        }
-        return sb.toString();
-        
-    }
-
-    @Override
-    public String toFormattedString() {
-        return toFormattedString(MAX_FIELDS);
     }
 
     /**
@@ -218,8 +152,70 @@ public final class BedFileRecord extends Gene implements AnnotationFileRecord {
         return rtrn;
     }
     
+    @Override
+    public String toFormattedBedString(int numFields) {
+        validateBedFieldNumber(numFields);
+        
+        // Required fields
+        final StringBuilder sb = new StringBuilder();
+        sb.append(ref + "\t");
+        sb.append(getStart() + "\t");
+        sb.append(getEnd());
+        if (numFields == 3) return sb.toString();
+        
+        // Name
+        sb.append("\t" + name);
+        if (numFields == 4) return sb.toString();
+        
+        // Score
+        sb.append("\t" + score);
+        if (numFields == 5) return sb.toString();
+        
+        // Strand
+        sb.append("\t" + strand.toString());
+        if (numFields == 6) return sb.toString();
+        
+        // Thick
+        sb.append("\t" + cdsStartPos + "\t" + cdsEndPos);
+        if (numFields == 8) return sb.toString();
+
+        sb.append("\t" + color.getRed() + "," + color.getGreen() + "," + color.getBlue());
+        if (numFields == 9) return sb.toString();
+        
+        sb.append("\t" + getNumberOfBlocks() + "\t");
+        Iterator<Annotated> blocks = getBlockIterator();
+        while (blocks.hasNext()) {
+            Annotated block = blocks.next();
+            // trailing comma after last block is OK
+            sb.append(block.getSize() + ",");
+        }
+        sb.append("\t");
+        blocks = getBlockIterator();
+        while (blocks.hasNext()) {
+            Annotated block = blocks.next();
+            // trailing comma after last block is OK
+            sb.append((block.getStart() - getStart()) + ",");
+        }
+        sb.append(System.lineSeparator());
+        return sb.toString();
+    }
+    
     public static BedBuilder builder() {
         return new BedBuilder();
+    }
+    
+    static void validateBedFieldNumber(int i) {
+        if (IntStream.of(BedFileRecord.VALID_NUM_FIELDS)
+                .noneMatch(x -> x == i)) {
+
+            throw new IllegalArgumentException(invalidBedNumberMessage(i));
+        }
+    }
+    
+    private static String invalidBedNumberMessage(int i) {
+        return "Attempted to create formatted BED string with invalid " +
+                "number of fields: " + i + ". Number of fields must be one " +
+                "of 3, 4, 5, 6, 8, 9, 12.";
     }
     
     @Override

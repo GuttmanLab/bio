@@ -18,20 +18,23 @@ public class ReadPair implements PairedSamRecord, Aligned<PairedEndAlignment> {
     private final SingleRead read2;
     
     /**
-     * Constructs an instance of this object from two <code>SingleRead</code>s.
+     * Constructs an instance of this object from two <code>SingleRead</code>
+     * objects.
      * <p>
      * The reads do not need to be added in a particular order. This constructor checks
      * the first-in-pair SAM flag and assigns the reads appropriately.
      * <p>
      * These reads do not need to originate from the same reference or even have
      * valid mappings.
+     * 
      * @param read1 - one alignment
      * @param read2 - the other alignment
+     * 
      * @throws NullPointerException if either argument is null
      */
     public ReadPair(SingleRead read1, SingleRead read2) {
-        Objects.requireNonNull(read1, "null read-1 value passed to constructor");
-        Objects.requireNonNull(read2, "null read-2 value passed to constructor");
+        Objects.requireNonNull(read1, "Read 1 cannot be null.");
+        Objects.requireNonNull(read2, "Read 2 cannot be null.");
         if (read1.isFirstInPair()) {
             this.read1 = read1;
             this.read2 = read2;

@@ -4,12 +4,12 @@ import java.util.Iterator;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import edu.caltech.lncrna.bio.annotation.Annotation.AnnotationBuilder;
 import edu.caltech.lncrna.bio.datastructures.Interval;
+import edu.caltech.lncrna.bio.io.FormattableWithFields;
 
 /**
- * Objects that implement the <code>Annotated</code> interface have a defined
- * location on a reference genome.
+ * This interface defines the behavior of an object that has a location on a
+ * reference genome.
  * <p>
  * At a minimum, an <code>Annotated</code> object has
  * <ul>
@@ -19,100 +19,154 @@ import edu.caltech.lncrna.bio.datastructures.Interval;
  * <li>an orientation or strandedness</li>
  * </ul>
  */
-public interface Annotated extends Interval, Iterable<Annotated> {
+public interface Annotated extends FormattableWithFields, Interval,
+Iterable<Annotated> {
 
     /**
-     * Gets the name of the reference that this annotation belongs to.
+     * Returns the name of the reference that this annotation belongs to.
      * <p>
      * The reference name is typically a chromosome such as "chr1" or
      * "chrX".
+     * 
+     * @return the reference name of this annotation
      */
     public String getReferenceName();
     
     /**
-     * Gets the start coordinate of this.
+     * Returns the start coordinate of this.
      * <p>
-     * Annotation coordinates are zero-based, closed-open. 
+     * The start coordinate of an annotation corresponds to the end of this
+     * annotation closest to the start of the reference. To get the 5'-end or
+     * the 3'-end of this annotation, use the {@link #getFivePrimePosition()}
+     * method or the {@link #getThreePrimePosition()} method.
+     * <p>
+     * Annotation coordinates are zero-based, closed-open.
+     *  
+     * @return the start coordinate of this annotation
      */
     @Override
     public int getStart();
     
     /**
-     * Gets the end coordinate of this.
+     * Returns the end coordinate of this.
+     * <p>
+     * The end coordinate of an annotation corresponds to the end of this
+     * annotation closest to the end of the reference. To get the 5'-end or
+     * the 3'-end of this annotation, use the {@link #getFivePrimePosition()}
+     * method or the {@link #getThreePrimePosition()} method.
      * <p>
      * Annotation coordinates are zero-based, closed-open.
+     *  
+     * @return the end coordinate of this annotation
      */
     @Override
     public int getEnd();
+
+    /**
+     * Returns the 5'-position of this annotation.
+     * 
+     * @return the 5'-position of this annotation
+     */
+    public int getFivePrimePosition();
     
     /**
-     * Gets the size of this.
+     * Returns the 3'-position of this annotation.
+     * 
+     * @return the 3'-position of this annotation
+     */
+    public int getThreePrimePosition();
+    
+    /**
+     * Returns the size of this.
      * <p>
-     * The size is the sum of the sizes of this objects's
+     * The size of an annotation is the sum of the sizes of the annotation's
      * blocks. In typical usage where exons are represented as blocks and
      * introns are implied as the gaps between the blocks, this method would
      * return the total exonic size.
+     * 
+     * @return the size of this annotation
      */
     public int getSize();
     
     /**
-     * Gets the span of this.
+     * Returns the span of this.
      * <p>
-     * The span is simply the distance from the 5'-end to the 3'-end of this
-     * object. This method will include introns or gaps between blocks when
+     * The span of an annotation is simply the distance from the 5'-end to the
+     * 3'-end. This method will include introns or gaps between blocks when
      * calculating the span.
+     * 
+     * @return the span of this annotation
      */
     public int getSpan();
     
     /**
-     * Gets the {@link Strand} of this.
+     * Returns the {@link Strand} of this.
+     * 
+     * @return the <code>Strand</code> of this annotation
      */
     public Strand getStrand();
 
     /**
-     * Gets the number of blocks making up this annotation.
+     * Returns the number of blocks making up this annotation.
+     * 
+     * @return the number of blocks in this annotation
      */
     public int getNumberOfBlocks();
     
     /**
-     * Gets an <code>Iterator</code> over the blocks making up this annotation.
+     * Returns an <code>Iterator</code> over the blocks making up this
+     * annotation.
+     * 
+     * @return an iterator over this annotation's blocks
      */
     public Iterator<Annotated> getBlockIterator();
     
     /**
-     * Gets the blocks making up this annotation as a stream.
+     * Returns the blocks making up this annotation as a {@link Stream}.
+     * 
+     * @return a stream of this annotation's blocks
      */
     public Stream<Annotated> getBlockStream();
     
     /**
-     * Whether this annotation overlaps another annotation.
+     * Returns <code>true</code> if this annotation overlaps another
+     * annotation.
+     * 
      * @param other - the other annotation
+     * @returns <code>true</code> if this annotation overlaps another
+     * annotation
      */
     public boolean overlaps(Annotated other);
     
     /**
-     * Whether this annotation is adjacent to another annotation.
+     * Returns <code>true</code> if this annotation is adjacent to another
+     * annotation.
      * <p>
      * Two annotations are considered adjacent if the two do not overlap, and
      * one begins where the other ends.
+     * 
      * @param other - the other annotation
+     * @return <code>true</code> if this annotation is adjacent to another
+     * annotation
      */
     public boolean isAdjacentTo(Annotated other);
     
     /**
-     * Returns the hull of this annotation.
+     * Returns the body of this annotation.
      * <p>
-     * The "hull" is the minimal contiguous annotation that contains all of
-     * this annotation's exons. In other words, the hull is what one gets by
-     * "filling in" all of this annotations introns.
+     * An annotation's body is the minimal contiguous annotation that contains
+     * all of the annotation's exons. In other words, the body is what one gets
+     * by "filling in" all of the introns.
+     * 
+     * @returns the body of this annotation
      */
     public Annotated getBody();
     
     /**
      * Returns the difference between this annotation and another.
      * <p>
-     * This object is the minuend. The object this method takes as an argument
-     * is the subtrahend.
+     * This annotation is the minuend. The annotation this method takes as an
+     * argument is the subtrahend.
      * <p>
      * If the two annotations do not overlap, this method will simply return
      * this annotation, wrapped in an <code>Optional</code>.
@@ -122,46 +176,116 @@ public interface Annotated extends Interval, Iterable<Annotated> {
      * negative), they do not overlap.
      * <p>
      * If the subtrahend completely contains the minuend, this method returns
-     * an empty <code>Optional</code> to represent an "empty" annotation.
+     * an empty <code>Optional</code> instance to represent an "empty"
+     * annotation.
+     * 
      * @param other - the annotation to be subtracted from this annotation
-     * @return an <code>Annotated</code> object representing the difference
+     * @return an <code>Annotated</code> instance representing the difference
      * between these two annotations, wrapped in an <code>Optional</code> if it
-     * exists; an empty <code>Optional</code> otherwise.
+     * exists; an empty <code>Optional</code> instance otherwise.
      */
-    public Optional<Annotated> minus(Annotated other); // TODO test strandedness and clarify in doc
+    public Optional<Annotated> minus(Annotated other);
     
     /**
      * Returns the intersection of this annotation with another.
      * <p>
-     * If the two annotations do not overlap, this method returns an empty
-     * <code>Optional</code>
+     * Returns the intersection of this annotation with another, wrapped in an
+     * <code>Optional</code>. If the two annotations do not overlap, this
+     * method returns an empty <code>Optional</code>.
+     * <p>
+     * This method takes orientation into consideration. A positive annotation
+     * does not intersect a negative annotation, regardless of their
+     * coordinates, because they are on different strands.
+     * 
      * @param other - the other annotation
+     * @return the intersection of this annotation with another
      */
     public Optional<Annotated> intersect(Annotated other);
     
     /**
-     * If this annotation fully contains another annotation.
+     * Returns <code>true</code> if this annotation fully contains another
+     * annotation.
      * <p>
      * This method takes orientation into consideration. A positive annotation
-     * cannot contain a negative annotation, regardless of their coordinates,
+     * does not contain a negative annotation, regardless of their coordinates,
      * because they are on different strands.
+     * 
      * @param other - the other annotation
+     * @returns <code>true</code> if this annotation fully contains another
+     * annotation
      */
     public boolean contains(Annotated other);
     
+    /**
+     * Returns this introns of this annotation as a single
+     * <code>Annotated</code> object, wrapped in an <code>Optional</code>.
+     * <p>
+     * If this annotation has no introns, an empty <code>Optional</code>
+     * instance will be returned.
+     * <p>
+     * This method returns the introns as a single annotation. If you need to
+     * handle the introns individually, see {@link #getIntronIterator()} or
+     * {@link #getIntronStream()}.
+     * 
+     * @return the introns of this annotation
+     */
     public Optional<Annotated> getIntrons();
-    
+
+    /**
+     * Returns an {@link Iterator} over the introns of this annotation.
+     * 
+     * @return an <code>Iterator</code> over the introns of this annotation.
+     */
     public Iterator<Annotated> getIntronIterator();
     
+    /**
+     * Returns the introns of this annotation as a {@link Stream}.
+     * @return the introns of this annotation as a <code>Stream</code>
+     */
     public Stream<Annotated> getIntronStream();
     
-    public int getFivePrimePosition();
-    
-    public int getThreePrimePosition();
-    
+    /**
+     * Returns <code>true</code> if this annotation is upstream of another.
+     * 
+     * @param other - the other annotation
+     * @return <code>true</code> if this annotation is upstream of another.
+     */
     public boolean isUpstreamOf(Annotated other);
-    
+
+    /**
+     * Returns <code>true</code> if this annotation is downstream of another.
+     * 
+     * @param other - the other annotation
+     * @return <code>true</code> if this annotation is downstream of another.
+     */
     public boolean isDownstreamOf(Annotated other);
+
+    /**
+     * Returns a BED12 <code>String</code> representation of this annotation.
+     * <p>
+     * The returned string is terminated with a newline, as is suitable for
+     * writing to a BED file.
+     * <p>
+     * BED12 is the standard BED format with all twelve fields.
+     * 
+     * @see https://genome.ucsc.edu/FAQ/FAQformat.html#format1
+     * @return a BED12 representation of this annotation 
+     */
+    public String toFormattedBedString();
+
+    /**
+     * Returns a BED <code>String</code> representation of this annotation with
+     * the given number of fields.
+     * <p>
+     * The returned string is terminated with a newline, as is suitable for
+     * writing to a BED file.
+     * 
+     * @see https://genome.ucsc.edu/FAQ/FAQformat.html#format1
+     * @param numFields - the desired number of fields
+     * @return a BED representation of this annotation with
+     * <code>numFields</code> fields
+     */
+    public String toFormattedBedString(int numFields);
     
     // TODO: Make this method private when Java 9 comes out
     public int[] getBlockBoundaries();

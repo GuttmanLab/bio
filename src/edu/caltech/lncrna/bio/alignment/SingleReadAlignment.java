@@ -6,6 +6,7 @@ import java.util.Optional;
 import edu.caltech.lncrna.bio.annotation.Annotation;
 import edu.caltech.lncrna.bio.annotation.Strand;
 import edu.caltech.lncrna.bio.sequence.Base;
+import edu.caltech.lncrna.bio.sequence.Sequence;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.SAMFileWriter;
@@ -20,6 +21,15 @@ implements Alignment, SingleSamRecord {
 
     protected final SAMRecord samRecord;
     
+    /**
+     * Constructs a new instance of a <code>SingleReadAlignment</code> from
+     * an htsjdk <code>SAMRecord</code>.
+     * 
+     * @param samRecord - the htsjdk <code>SAMRecord</code>
+     * @return a new instance of a <code>SingleReadAlignment</code>
+     * @throws NullPointerException if passed a null SAM record.
+     * @throws IllegalArgumentException if passed an unmapped SAM record.
+     */
     public static SingleReadAlignment newInstance(SAMRecord samRecord) {
         Objects.requireNonNull(samRecord,
                 "Null SAM record passed to factory constructor.");
@@ -51,9 +61,9 @@ implements Alignment, SingleSamRecord {
     }
     
     @Override
-    public Base getReadBaseFromReferencePosition(String chrom, int pos) {
+    public Base getReadBaseFromReferencePosition(int pos) {
 
-        Annotation interval = new Annotation(chrom, pos, pos + 1, Strand.BOTH);
+        Annotation interval = new Annotation(ref, pos, pos + 1, Strand.BOTH);
         if (!overlaps(interval)) {
             return Base.INVALID;
         }
@@ -192,6 +202,11 @@ implements Alignment, SingleSamRecord {
     }
     
     @Override
+    public boolean isSpliced() {
+        return getNumberOfBlocks() > 1;
+    }
+    
+    @Override
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -216,5 +231,35 @@ implements Alignment, SingleSamRecord {
     @Override
     public String toString() {
         return super.toString();
+    }
+
+    @Override
+    public Sequence changeName(String s) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Sequence complement() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Sequence complement(String s) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Sequence reverseComplement() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public Sequence reverseComplement(String s) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

@@ -6,6 +6,12 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 
 @Suite.SuiteClasses({
+    
+    // alignment package
+    TestPairedEndReadAlignment.class,
+    TestSingleRead.class,
+    TestSingleReadAlignment.class,
+    
     // annotation package
     TestAnnotation.class,
     TestAnnotationBuilder.class,
@@ -17,34 +23,22 @@ import org.junit.runners.Suite;
     TestWindowIterator.class,
     
     // datastructures package
+    TestGenomeTree.class,
     TestIntervalTree.class,
+    TestIntervalSetTree.class,
     
     // io package
+    TestBamWriter.class,
+    TestBedParser.class,
+    TestFastaParser.class,
+    TestFastqParser.class,
     TestPairedEndBamParser.class,
     TestSingleReadBamParser.class,
     
     // sequence package
+    TestFastaSequence.class,
+    TestFastqSequence.class,
     TestSequences.class
 })
-
-/*
-@Suite.SuiteClasses({
-    // datastructures package
-    TestIntervalSetTree.class,
-    TestIntervalTree.class,
-    
-    // annotation package
-    TestBlock.class,
-    TestBlockedAnnotation.class,
-    
-    // sequence package
-    TestSequences.class,
-    TestFastaSequence.class,
-    
-    // io package
-    TestFastaParser.class,
-    TestSingleReadBamParser.class,
-    TestPairedEndBamParser.class
-})*/
 
 public class TestSuite{}

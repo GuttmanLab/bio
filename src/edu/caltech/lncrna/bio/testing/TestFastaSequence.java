@@ -8,25 +8,9 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 import edu.caltech.lncrna.bio.sequence.FastaSequence;
+import edu.caltech.lncrna.bio.sequence.Sequence;
 
 public class TestFastaSequence {
-
-    private static String NAME1 = "name1";
-    private static String NAME2 = "name2";
-    private static String SEQ1 = "ACTGACTGN";
-    private static String COPY_OF_SEQ1 = "ACTGACTGN";
-    private static String RC_SEQ1 = "NCAGTCAGT";
-    private static String SEQ2 = "TGATNTGAT";
-    private static String ALL_A = "AAAAAAAA";
-    private static String ALL_T = "TTTTTTTT";
-    private static String A_AND_T = "ATATATTA";
-    
-    private static FastaSequence F1 = new FastaSequence(NAME1, SEQ1);
-    private static FastaSequence COPY_OF_F1 = new FastaSequence(NAME1, COPY_OF_SEQ1);
-    private static FastaSequence F2 = new FastaSequence(NAME2, SEQ2);
-    private static FastaSequence F_AS = new FastaSequence(NAME1, ALL_A);
-    private static FastaSequence F_TS = new FastaSequence(NAME1, ALL_T);
-    private static FastaSequence F_ATS = new FastaSequence(NAME1, A_AND_T);
     
     protected static final String nl = System.getProperty("line.separator");
     
@@ -35,109 +19,125 @@ public class TestFastaSequence {
     
     @Test
     public void testConstructorNullName() {
-        thrown.expect(IllegalArgumentException.class);
-        new FastaSequence(null, SEQ1);
+        thrown.expect(NullPointerException.class);
+        new FastaSequence(null, "ACTGGATGCA");
     }
     
     @Test
     public void testConstructorNullSequence() {
-        thrown.expect(IllegalArgumentException.class);
-        new FastaSequence(NAME1, null);
+        thrown.expect(NullPointerException.class);
+        new FastaSequence("Fasta1", null);
     }
     
     @Test
     public void testGetBases() {
-        assertThat(F1.getBases(), is(SEQ1));
+        Sequence a = new FastaSequence("fasta", "ATGGCTAGATC");
+        assertThat(a.getBases(), is("ATGGCTAGATC"));
     }
     
     @Test
     public void testGetName() {
-        assertThat(F1.getName(), is(NAME1));
+        Sequence a = new FastaSequence("fasta", "ATGGCTAGATC");
+        assertThat(a.getName(), is("fasta"));
     }
     
     @Test
     public void testGetNameAfterChangeName() {
-        FastaSequence newFasta = F1.changeName(NAME2);
-        assertThat(newFasta.getName(), is(NAME2));
+        Sequence oldFasta = new FastaSequence("foo", "ATGGCTAGTCA");
+        Sequence newFasta = oldFasta.changeName("bar");
+        assertThat(newFasta.getName(), is("bar"));
     }
     
     @Test
     public void testGetBasesAfterChangeName() {
-        FastaSequence newFasta = F1.changeName(NAME2);
-        assertThat(newFasta.getBases(), is(SEQ1));
+        Sequence oldFasta = new FastaSequence("foo", "ATGGCTAGTCA");
+        Sequence newFasta = oldFasta.changeName("bar");
+        assertThat(newFasta.getBases(), is("ATGGCTAGTCA"));
     }
     
     @Test
     public void testReverseComplementSameName() {
-        assertThat(F1.reverseComplement(),
-                is(new FastaSequence(NAME1, RC_SEQ1)));
+        Sequence oldFasta = new FastaSequence("foo", "ATGGCTAGA");
+        assertThat(oldFasta.reverseComplement(), 
+                is(new FastaSequence("foo", "TCTAGCCAT")));
     }
     
     @Test
     public void testReverseComplementDifferentName() {
-        assertThat(F1.reverseComplement(NAME2),
-                is(new FastaSequence(NAME2, RC_SEQ1)));
+        Sequence oldFasta = new FastaSequence("foo", "ATGGCTAGA");
+        assertThat(oldFasta.reverseComplement("bar"), 
+                is(new FastaSequence("bar", "TCTAGCCAT")));
     }
     
     //TODO subsequence tests
     
     @Test
     public void testLength() {
-        assertThat(F1.length(), is(SEQ1.length()));
+        Sequence f = new FastaSequence("foo", "ATGATGCACA");
+        assertThat(f.length(), is(10));
     }
     
     @Test
     public void testIsPolyAPositiveAllA() {
-        assertThat(F_AS.isPolyA(), is(true));
+        Sequence f = new FastaSequence("foo", "AaaAAAaAAA");
+        assertThat(f.isPolyA(), is(true));
     }
     
     @Test
     public void testIsPolyAPositiveAllT() {
-        assertThat(F_TS.isPolyA(), is(true));
+        Sequence f = new FastaSequence("foo", "TttTTtTTT");
+        assertThat(f.isPolyA(), is(true));
     }
     
     @Test
     public void testIsPolyANegativeAAndT() {
-        assertThat(F_ATS.isPolyA(), is(false));
+        Sequence f = new FastaSequence("foo", "AtatATtattat");
+        assertThat(f.isPolyA(), is(false));
     }
     
     @Test
     public void testIsPolyANegativeGeneral() {
-        assertThat(F1.isPolyA(), is(false));
+        Sequence f = new FastaSequence("foo", "GgtcgatGATcg");
+        assertThat(f.isPolyA(), is(false));
     }
     
     @Test
     public void testToFasta() {
-        assertThat(F1.toFasta(), is(">" + NAME1 + nl + SEQ1));
+        Sequence f = new FastaSequence("foo", "AGTTTAGATA");
+        assertThat(f.toFasta(), is(">" + "foo" + nl + "AGTTTAGATA" + nl));
     }
     
-    @Test
-    public void testToFormattedString() {
-        assertThat(F1.toFormattedString(), is(">" + NAME1 + nl + SEQ1));
-    }
-    
-    @Test
-    public void testToString() {
-        assertThat(F1.toString(), is(NAME1 + ": " + SEQ1));
-    }
     
     @Test
     public void testEqualsIdentity() {
-        assertThat(F1.equals(F1), is(true));
+        Sequence f = new FastaSequence("foo", "AGGTAGAGA");
+        assertThat(f.equals(f), is(true));
     }
     
     @Test
     public void testEqualsNull() {
-        assertThat(F1.equals(null), is(false));
+        Sequence f = new FastaSequence("foo", "AGGTAGAGA");
+        assertThat(f.equals(null), is(false));
     }
     
     @Test
     public void testEqualsCopy() {
-        assertThat(F1.equals(COPY_OF_F1), is(true));
+        Sequence f1 = new FastaSequence("foo", "AGGTAGAGA");
+        Sequence f2 = new FastaSequence("foo", "AGGTAGAGA");
+        assertThat(f1.equals(f2), is(true));
     }
     
     @Test
-    public void testEqualsFalse() {
-        assertThat(F1.equals(F2), is(false));
+    public void testDifferentNameEqualsFalse() {
+        Sequence f1 = new FastaSequence("foo1", "AGGTAGAGA");
+        Sequence f2 = new FastaSequence("foo2", "AGGTAGAGA");
+        assertThat(f1.equals(f2), is(false));
+    }
+    
+    @Test
+    public void testDifferentBasesEqualsFalse() {
+        Sequence f1 = new FastaSequence("foo", "TAGGTAGAGA");
+        Sequence f2 = new FastaSequence("foo", "CAGGTAGAGA");
+        assertThat(f1.equals(f2), is(false));
     }
 }

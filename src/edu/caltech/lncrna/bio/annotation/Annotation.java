@@ -1,5 +1,6 @@
 package edu.caltech.lncrna.bio.annotation;
 
+import java.awt.Color;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,18 +22,32 @@ import htsjdk.samtools.CigarElement;
 import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.TextCigarCodec;
 
+/**
+ * This class represents the simplest type of {@link Annotated} object.
+ * <p>
+ * In this framework, the <code>Annotation</code> class is the superclass of
+ * all other types of annotations, e.g., {@link Gene}.
+ */
 public class Annotation implements Annotated {
     
     protected final String ref;
     protected final Strand strand;
     protected final int[] blockBoundaries;
     
-    public Annotation(AnnotationBuilder b) {
+    protected Annotation(AnnotationBuilder b) {
         this.ref = b.ref;
         this.strand = b.strand;
         this.blockBoundaries = b.blockBoundaries;
     }
     
+    /**
+     * Constructs a new <code>Annotation</code> instance with the same
+     * reference, coordinates, and strand as the passed <code>Annotated</code>
+     * object.
+     *
+     * @param a - the <code>Annotated</code> object to copy
+     * @throws NullPointerException if passed a null argument.
+     */
     public Annotation(Annotated a) {
         Objects.requireNonNull(a, "Null annotation passed to constructor");
         this.ref = a.getReferenceName();
@@ -40,39 +55,64 @@ public class Annotation implements Annotated {
         this.blockBoundaries = a.getBlockBoundaries();
     }
     
+    /**
+     * Constructs a new <code>Annotation</code> with the same
+     * reference and coordinates as the passed <code>Annotated</code> object,
+     * but with the given <code>Strand</code>.
+     *
+     * @param a - the <code>Annotated</code> object to copy
+     * @param s - the <code>Strand</code> to assign
+     * @throws NullPointerException if passed a null argument.
+     */
     public Annotation(Annotated a, Strand s) {
-        Objects.requireNonNull(a, "Null annotation passed to constructor");
-        Objects.requireNonNull(s, "Null strand passed to constructor");
-        this.ref = a.getReferenceName();
-        this.blockBoundaries = a.getBlockBoundaries();
-        this.strand = s;
+        this(Objects.requireNonNull(a).getReferenceName(),
+             Objects.requireNonNull(a).getBlockBoundaries(),
+             s);
     }
     
+    /**
+     * Constructs a new <code>Annotation</code> with the passed parameters.
+     * 
+     * @param ref - the reference
+     * @param start - the start coordinate
+     * @param end - the end coordinate
+     * @param strand - the {@link Strand}
+     * 
+     * @throws NullPointerException if passed a null argument.
+     * @throws IllegalArgumentException if <code>start >= end</code>
+     * @throws IllegalArgumentException if <code>start < 0</code>
+     * @throws IllegalArgumentException if passed <code>Strand.INVALID</code>
+     * as a strand.
+     */
     public Annotation(String ref, int start, int end, Strand strand) {
-        this.ref = Objects.requireNonNull(ref, "Null reference passed to constructor");
-        this.strand = Objects.requireNonNull(strand, "Null strand passed to constructor");
-        
-        if (strand.equals(Strand.INVALID)) {
-            throw new IllegalArgumentException("Invalid strand passed to constructor");
-        }
+        this(ref, new int[] {start, end}, strand);
 
         if (start >= end) {
-            throw new IllegalArgumentException("Invalid coordinates passed to constructor. "
-                    + "Start must be greater than end. start: " + start + ", end: " + end);
+            throw new IllegalArgumentException("Invalid coordinates passed to"
+                    + "constructor. Start must be greater than end. start: " +
+                    start + ", end: " + end);
         }
         
         if (start < 0) {
-            throw new IllegalArgumentException("Invalid coordinates passed to constructor. "
-                    + "Start must be greater than or equal to 0. start: " + start);
+            throw new IllegalArgumentException("Invalid coordinates passed to"
+                    + "constructor. Start must be greater than or equal to " + 
+                    "0. start: " + start);
         }
-
-        this.blockBoundaries = new int[] {start, end};
     }
     
     protected Annotation(String ref, int[] blockBoundaries, Strand strand) {
-        this.ref = ref;
-        this.blockBoundaries = blockBoundaries;
-        this.strand = strand;
+        this.ref = Objects.requireNonNull(ref,
+                "Null reference name passed to Annotation constructor.");
+        
+        this.blockBoundaries = Objects.requireNonNull(blockBoundaries,
+                "Null boundaries array passed to Annotation constructor.");
+        
+        this.strand = Objects.requireNonNull(strand,
+                "Null strand passed to Annotation constructor.");
+        
+        if (strand.equals(Strand.INVALID)) {
+            throw new IllegalArgumentException("Invalid strand passed to constructor");
+        }    
     }
     
     @Override
@@ -118,7 +158,12 @@ public class Annotation implements Annotated {
     public int getSpan() {
         return getEnd() - getStart();
     }
-    
+   
+    /**
+     * @throws IllegalArgumentException if the 5'-position is not defined for
+     * this annotation. This occurs if the orientation is not
+     * <code>Strand.POSITIVE</code> or <code>Strand.NEGATIVE</code>.
+     */
     @Override
     public int getFivePrimePosition() {
         switch (getStrand()) {
@@ -132,6 +177,11 @@ public class Annotation implements Annotated {
         }
     }
     
+    /**
+     * @throws IllegalArgumentException if the 3'-position is not defined for
+     * this annotation. This occurs if the orientation is not
+     * <code>Strand.POSITIVE</code> or <code>Strand.NEGATIVE</code>.
+     */
     @Override
     public int getThreePrimePosition() {
         switch (getStrand()) {
@@ -144,7 +194,12 @@ public class Annotation implements Annotated {
                     "for strand " + getStrand().toString());
         }
     }
-    
+
+    /**
+     * @throws IllegalArgumentException if "upstream" is not defined for this
+     * annotation. This occurs if the orientation is not
+     * <code>Strand.POSITIVE</code> or <code>Strand.NEGATIVE</code>.
+     */
     @Override
     public boolean isUpstreamOf(Annotated other) {
         if (!getReferenceName().equals(other.getReferenceName())) {
@@ -163,7 +218,12 @@ public class Annotation implements Annotated {
                     "for strand " + other.getStrand().toString());
         }
     }
-    
+
+    /**
+     * @throws IllegalArgumentException if "downstream" is not defined for this
+     * annotation. This occurs if the orientation is not
+     * <code>Strand.POSITIVE</code> or <code>Strand.NEGATIVE</code>.
+     */
     @Override
     public boolean isDownstreamOf(Annotated other) {
         if (!getReferenceName().equals(other.getReferenceName())) {
@@ -206,45 +266,144 @@ public class Annotation implements Annotated {
     
     @Override
     public Optional<Annotated> getIntrons() {
-        
-        if (getNumberOfBlocks() == 1) {
-            return Optional.empty();
-        } else {
-            return getBody().minus(this);
-        }
+        return getNumberOfBlocks() == 1
+                ? Optional.empty()
+                : getBody().minus(this);
     }
     
     @Override
     public Iterator<Annotated> getIntronIterator() {
         Optional<Annotated> introns = getIntrons();
-        
-        if (introns.isPresent()) {
-            return introns.get().getBlockIterator();
-        } else {
-            return Collections.emptyIterator();
-        }
+        return introns.isPresent()
+                ? introns.get().getBlockIterator()
+                : Collections.emptyIterator();
     }
     
     @Override
     public Stream<Annotated> getIntronStream() {
         Optional<Annotated> introns = getIntrons();
+        return introns.isPresent()
+                ? introns.get().getBlockStream()
+                : Stream.empty();
+    }
+
+    @Override
+    public boolean isAdjacentTo(Annotated other) {
+        return ref.equals(other.getReferenceName()) &&
+               (getStart() == other.getEnd() || getEnd() == other.getStart());
+    }
+    
+    /**
+     * Returns a builder for constructing new instances of this class.
+     * @return a builder for this class
+     */
+    public static AnnotationBuilder builder() {
+        return new AnnotationBuilder();
+    }
+    
+    @Override
+    public String toFormattedString() {
+        return toFormattedBedString();
+    }
+    
+    @Override
+    public String toFormattedString(int numFields) {
+        return toFormattedBedString(numFields);
+    }
+    
+    @Override
+    public String toFormattedBedString() {
+        return toFormattedBedString(BedFileRecord.MAX_FIELDS);
+    }
+    
+    @Override
+    public String toFormattedBedString(int numFields) {
+        BedFileRecord.validateBedFieldNumber(numFields);
         
-        if (introns.isPresent()) {
-            return introns.get().getBlockStream();
-        } else {
-            return Stream.empty();
+        // Required fields
+        final StringBuilder sb = new StringBuilder();
+        sb.append(ref + "\t");
+        sb.append(getStart() + "\t");
+        sb.append(getEnd());
+        if (numFields == 3) return sb.toString();
+
+        sb.append("\t" + BedFileRecord.EMPTY_NAME);
+        if (numFields == 4) return sb.toString();
+        
+        // Score
+        sb.append("\t" + BedFileRecord.DEFAULT_SCORE);
+        if (numFields == 5) return sb.toString();
+        
+        // Strand
+        sb.append("\t" + strand.toString());
+        if (numFields == 6) return sb.toString();
+        
+        // Thick
+        sb.append("\t" + getStart() + "\t" + getStart());
+        if (numFields == 8) return sb.toString();
+        
+        Color c = BedFileRecord.DEFAULT_COLOR;
+        sb.append("\t" + c.getRed() + "," + c.getGreen() + "," + c.getBlue());
+        if (numFields == 9) return sb.toString();
+        
+        sb.append("\t" + getNumberOfBlocks() + "\t");
+        Iterator<Annotated> blocks = getBlockIterator();
+        while (blocks.hasNext()) {
+            Annotated block = blocks.next();
+            // trailing comma after last block is OK
+            sb.append(block.getSize() + ",");
         }
+        sb.append("\t");
+        blocks = getBlockIterator();
+        while (blocks.hasNext()) {
+            Annotated block = blocks.next();
+            // trailing comma after last block is OK
+            sb.append((block.getStart() - getStart()) + ",");
+        }
+        sb.append(System.lineSeparator());
+        return sb.toString();
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        
+        if (!(o instanceof Annotation)) {
+            return false;
+        }
+        
+        Annotation other = (Annotation) o;
+        
+        return ref.equals(other.ref) &&
+               strand.equals(other.strand) &&
+               Arrays.equals(blockBoundaries, other.getBlockBoundaries());
+    }
+    
+    @Override
+    public int hashCode() {
+        int hashCode = 17;
+        hashCode = 37 * hashCode + ref.hashCode();
+        hashCode = 37 * hashCode + strand.hashCode();
+        hashCode = 37 * hashCode + Arrays.hashCode(blockBoundaries);
+        return hashCode;
+    }
+    
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(ref + ":");
+        for (Annotated block : this) {
+            sb.append("[" + block.getStart() + "-" + block.getEnd() + "]");
+        }
+        sb.append("(" + strand.toString() + ")");
+        return sb.toString();
     }
     
     @Override
     public boolean overlaps(Annotated other) {
         return intersect(other).isPresent();
-    }
-    
-    @Override
-    public boolean isAdjacentTo(Annotated other) {
-        return ref.equals(other.getReferenceName()) &&
-               (getStart() == other.getEnd() || getEnd() == other.getStart());
     }
     
     @Override
@@ -266,6 +425,7 @@ public class Annotation implements Annotated {
         return mergeAnnotations(other, newStrand, (a, b) -> a && b);
     }
     
+    @Override
     public Optional<Annotated> minus(Annotated other) {
         
         if (!hasOverlappingBodies(other)) {
@@ -321,6 +481,18 @@ public class Annotation implements Annotated {
         }
     }
     
+    /*
+     * Methods in this class that deal with finding the relationship between
+     * two annotations -- like intersect and minus -- rely on this method.
+     * 
+     * This method accepts another annotation, as well as a function of type
+     * f: Bool × Bool -> Bool
+     * 
+     * It returns an int[] that corresponds to the block boundaries of the
+     * resulting annotation. For example, intersecting a 
+     * 
+     * 
+     */
     protected int[] merge(Annotated other, BiFunction<Boolean, Boolean, Boolean> op) {
         
         // Add a sentinel value at the end of the block boundaries
@@ -362,47 +534,6 @@ public class Annotation implements Annotated {
         }
 
         return rtrnEndpoints.stream().mapToInt(i -> i).toArray();
-    }
-    
-    public static AnnotationBuilder builder() {
-        return new AnnotationBuilder();
-    }
-    
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        
-        if (!(o instanceof Annotation)) {
-            return false;
-        }
-        
-        Annotation other = (Annotation) o;
-        
-        return ref.equals(other.ref) &&
-               strand.equals(other.strand) &&
-               Arrays.equals(blockBoundaries, other.getBlockBoundaries());
-    }
-    
-    @Override
-    public int hashCode() {
-        int hashCode = 17;
-        hashCode = 37 * hashCode + ref.hashCode();
-        hashCode = 37 * hashCode + strand.hashCode();
-        hashCode = 37 * hashCode + Arrays.hashCode(blockBoundaries);
-        return hashCode;
-    }
-    
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(ref + ":");
-        for (Annotated block : this) {
-            sb.append("[" + block.getStart() + "-" + block.getEnd() + "]");
-        }
-        sb.append("(" + strand.toString() + ")");
-        return sb.toString();
     }
 
     public static class AnnotationBuilder {

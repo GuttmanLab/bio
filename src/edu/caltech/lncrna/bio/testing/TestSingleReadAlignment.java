@@ -28,25 +28,6 @@ public class TestSingleReadAlignment {
      */
     private final static Path BAM1 = Paths.get("/Users/masonmlai/Documents/" +
             "Repositories/GuttmanLab/testing/paired_end_with_splice.bam");
-
-    @Test
-    public void testReadBaseFromRefPosWrongChromosome() {
-        
-        // Two reads exist with this. Will test the second in pair.
-        String name = "HISEQ:634:HC2KYBCXY:1:2212:10038:36930";
-
-        try (SingleReadBamParser bp = new SingleReadBamParser(BAM1)) {
-            Iterator<SingleReadAlignment> alignments = bp.getAlignmentIterator();
-            while (alignments.hasNext()) {
-                SingleReadAlignment alignment = alignments.next();
-                if (alignment.getName().equals(name) && !alignment.isFirstInPair()) {
-                    assertThat(alignment.getReadBaseFromReferencePosition("chr2", 34210228),
-                            is(Base.INVALID));
-                    break;
-                }
-            }
-        }
-    }
     
     @Test
     public void testReadBaseFromRefPosInitialSoftClip() {
@@ -59,13 +40,13 @@ public class TestSingleReadAlignment {
             while (alignments.hasNext()) {
                 SingleReadAlignment alignment = alignments.next();
                 if (alignment.getName().equals(name) && !alignment.isFirstInPair()) {
-                    assertThat(alignment.getReadBaseFromReferencePosition("chr1", 34210226),
+                    assertThat(alignment.getReadBaseFromReferencePosition(34210226),
                             is(Base.INVALID));
-                    assertThat(alignment.getReadBaseFromReferencePosition("chr1", 34210227),
+                    assertThat(alignment.getReadBaseFromReferencePosition(34210227),
                             is(Base.A));
-                    assertThat(alignment.getReadBaseFromReferencePosition("chr1", 34210228),
+                    assertThat(alignment.getReadBaseFromReferencePosition(34210228),
                             is(Base.C));
-                    assertThat(alignment.getReadBaseFromReferencePosition("chr1", 34210229),
+                    assertThat(alignment.getReadBaseFromReferencePosition(34210229),
                             is(Base.G));
                     break;
                 }
@@ -84,13 +65,13 @@ public class TestSingleReadAlignment {
             while (alignments.hasNext()) {
                 SingleReadAlignment alignment = alignments.next();
                 if (alignment.getName().equals(name) && !alignment.isFirstInPair()) {
-                    assertThat(alignment.getReadBaseFromReferencePosition("chr1", 34210261),
+                    assertThat(alignment.getReadBaseFromReferencePosition(34210261),
                             is(Base.C));
-                    assertThat(alignment.getReadBaseFromReferencePosition("chr1", 34210262),
+                    assertThat(alignment.getReadBaseFromReferencePosition(34210262),
                             is(Base.T));
-                    assertThat(alignment.getReadBaseFromReferencePosition("chr1", 34210263),
+                    assertThat(alignment.getReadBaseFromReferencePosition(34210263),
                             is(Base.A));
-                    assertThat(alignment.getReadBaseFromReferencePosition("chr1", 34210264),
+                    assertThat(alignment.getReadBaseFromReferencePosition(34210264),
                             is(Base.G));
                     break;
                 }
@@ -109,17 +90,17 @@ public class TestSingleReadAlignment {
             while (alignments.hasNext()) {
                 SingleReadAlignment alignment = alignments.next();
                 if (alignment.getName().equals(name) && alignment.isFirstInPair()) {
-                    assertThat(alignment.getReadBaseFromReferencePosition("chr1", 60603460),
+                    assertThat(alignment.getReadBaseFromReferencePosition(60603460),
                             is(Base.G));
-                    assertThat(alignment.getReadBaseFromReferencePosition("chr1", 60603461),
+                    assertThat(alignment.getReadBaseFromReferencePosition(60603461),
                             is(Base.G));
-                    assertThat(alignment.getReadBaseFromReferencePosition("chr1", 60603462),
+                    assertThat(alignment.getReadBaseFromReferencePosition(60603462),
                             is(Base.INVALID));
-                    assertThat(alignment.getReadBaseFromReferencePosition("chr1", 60603463),
+                    assertThat(alignment.getReadBaseFromReferencePosition(60603463),
                             is(Base.INVALID));
-                    assertThat(alignment.getReadBaseFromReferencePosition("chr1", 60603464),
+                    assertThat(alignment.getReadBaseFromReferencePosition(60603464),
                             is(Base.T));
-                    assertThat(alignment.getReadBaseFromReferencePosition("chr1", 60603465),
+                    assertThat(alignment.getReadBaseFromReferencePosition(60603465),
                             is(Base.T));
                     break;
                 }

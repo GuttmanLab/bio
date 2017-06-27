@@ -14,7 +14,7 @@ public class TestAnnotationContainment {
 
     @Test
     public void testBlockContainsSelf() {
-        Annotated b= new Annotation("chr1", 100, 200, Strand.POSITIVE);
+        Annotated b = new Annotation("chr1", 100, 200, Strand.POSITIVE);
         assertThat(b.contains(b), is(true));
     }
     

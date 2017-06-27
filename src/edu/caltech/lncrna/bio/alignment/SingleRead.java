@@ -1,7 +1,9 @@
 package edu.caltech.lncrna.bio.alignment;
 
+import java.util.Objects;
 import java.util.Optional;
 
+import edu.caltech.lncrna.bio.sequence.Sequence;
 import htsjdk.samtools.Cigar;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMRecord;
@@ -17,10 +19,12 @@ implements Aligned<SingleReadAlignment>, SingleSamRecord {
     private final SAMRecord samRecord;
     
     /**
-     * Constructs an instance from an htsjdk <code>SAMRecord</code> object.
-     * @param samRecord
+     * Constructs a <code>SingleRead</code> object from an htsjdk
+     * <code>SAMRecord</code> object.
+     * @param samRecord the htsjdk <code>SAMRecord</code>
      */
     public SingleRead(SAMRecord samRecord) {
+        Objects.requireNonNull(samRecord, "SAM record cannot be null.");
         this.samRecord = samRecord;
     }
     
@@ -140,6 +144,43 @@ implements Aligned<SingleReadAlignment>, SingleSamRecord {
     @Override
     public byte[] getQualities() {
         return samRecord.getBaseQualities();
+    }
+    
+    @Override
+    public SingleRead changeName(String s) {
+        SAMRecord tmp = samRecord.deepCopy();
+        tmp.setReadName(s);
+        return new SingleRead(tmp);
+    }
+
+    @Override
+    public Sequence complement() {
+        // TODO
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Sequence complement(String s) {
+        // TODO
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Sequence reverseComplement() {
+        // TODO
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Sequence reverseComplement(String s) {
+        // TODO
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String toFasta() {
+        // TODO
+        throw new UnsupportedOperationException();
     }
     
     @Override

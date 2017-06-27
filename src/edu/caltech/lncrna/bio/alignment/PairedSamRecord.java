@@ -7,7 +7,7 @@ package edu.caltech.lncrna.bio.alignment;
 public interface PairedSamRecord extends SamRecord {
     
     /**
-     * Gets the name of this.
+     * Returns the name of this.
      */
     public String getName();
     

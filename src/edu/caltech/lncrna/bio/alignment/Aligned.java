@@ -12,7 +12,7 @@ import edu.caltech.lncrna.bio.annotation.Annotated;
  * Unmapped reads caused problems in previous implementations because reads
  * were required to have interval-like characteristics--a start, an end, and
  * so on. Aligned, interval-like objects which have definitely been mapped to a
- * specific reference location instead implement the <code>Aligned</code>
+ * specific reference location instead implement the <code>Alignment</code>
  * interface.
  * @param <T> - the type of the successful alignment that this object possibly
  * represents; in practical terms, the type of object returned by
@@ -23,8 +23,9 @@ public interface Aligned<T extends Annotated> extends SamRecord {
     /**
      * If this has a valid alignment.
      * <p>
-     * Returns <code>false</code> if this is unmapped or does not otherwise have a
-     * valid alignment. Otherwise, returns <code>true</code>.
+     * Returns <code>true</code> if this object has a valid alignment.
+     * Discordant alignments are considered invalid.
+     * @return <code>true</code> if this object has a valid alignment
      */
     public boolean hasAlignment();
     
@@ -34,6 +35,7 @@ public interface Aligned<T extends Annotated> extends SamRecord {
      * <p>
      * If this object is unmapped or has no valid alignment, this method returns
      * an empty <code>Optional</code>.
+     * @returns the alignment represented by this object
      */
     public Optional<T> getAlignment();
 }

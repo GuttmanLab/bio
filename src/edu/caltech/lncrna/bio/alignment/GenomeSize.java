@@ -5,8 +5,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Contains static maps of genome sizes. Used to construct
- * <code>CoordinateSpace</code>s.  
+ * A convenience class containing static maps of genome sizes. Used to
+ * construct <code>CoordinateSpace</code> objects.
+ * <p>
+ * This class does not handle unlocalized sequences, unplaced sequences, or
+ * alternate loci.
  */
 public final class GenomeSize {
     
