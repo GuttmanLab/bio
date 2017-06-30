@@ -23,7 +23,8 @@ import htsjdk.samtools.CigarOperator;
 import htsjdk.samtools.TextCigarCodec;
 
 /**
- * This class represents the simplest type of {@link Annotated} object.
+ * The <code>Annotation</code> class represents the simplest type of
+ * {@link Annotated} object.
  * <p>
  * In this framework, the <code>Annotation</code> class is the superclass of
  * all other types of annotations, e.g., {@link Gene}.
@@ -41,6 +42,8 @@ public class Annotation implements Annotated {
     }
     
     /**
+     * Class constructor.
+     * <p>
      * Constructs a new <code>Annotation</code> instance with the same
      * reference, coordinates, and strand as the passed <code>Annotated</code>
      * object.
@@ -56,6 +59,8 @@ public class Annotation implements Annotated {
     }
     
     /**
+     * Class constructor.
+     * <p>
      * Constructs a new <code>Annotation</code> with the same
      * reference and coordinates as the passed <code>Annotated</code> object,
      * but with the given <code>Strand</code>.
@@ -71,6 +76,8 @@ public class Annotation implements Annotated {
     }
     
     /**
+     * Class constructor.
+     * <p>
      * Constructs a new <code>Annotation</code> with the passed parameters.
      * 
      * @param ref - the reference

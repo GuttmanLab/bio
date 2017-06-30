@@ -5,8 +5,8 @@ import java.util.Optional;
 import edu.caltech.lncrna.bio.annotation.Annotated;
 
 /**
- * This interface defines the behavior of objects that have been mapped,
- * successfully or unsuccessfully, to a reference.
+ * Defines the behavior of objects that have been mapped, successfully or
+ * unsuccessfully, to a reference.
  * <p>
  * This interface was originally created to handle unmapped SAM-file reads.
  * Unmapped reads caused problems in previous implementations because reads
@@ -21,21 +21,18 @@ import edu.caltech.lncrna.bio.annotation.Annotated;
 public interface Aligned<T extends Annotated> extends SamRecord {
 
     /**
-     * If this has a valid alignment.
+     * Whether this object has a valid alignment.
      * <p>
-     * Returns <code>true</code> if this object has a valid alignment.
      * Discordant alignments are considered invalid.
-     * @return <code>true</code> if this object has a valid alignment
+     * @return <code>true</code> if this object has a valid alignment;
+     * <code>false</code> otherwise
      */
     public boolean hasAlignment();
     
     /**
-     * Gets the successful alignment represented by this object wrapped in an
-     * <code>Optional</code> if it exists.
-     * <p>
-     * If this object is unmapped or has no valid alignment, this method returns
-     * an empty <code>Optional</code>.
-     * @returns the alignment represented by this object
+     * @return The alignment represented by this object wrapped in an
+     * <code>Optional</code> if it exists. If this object is unmapped or has no
+     * valid alignment, this method returns an empty <code>Optional</code>.
      */
     public Optional<T> getAlignment();
 }

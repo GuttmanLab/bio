@@ -6,16 +6,16 @@ import java.util.Iterator;
 import java.util.Optional;
 
 /**
- * This class represents an <code>Annotation</code> with a name and an optional
+ * This class represents an {@link Annotation} with a name and an optional
  * coding region.
  * <p>
  * Most constructors for this class are not exposed. To construct a
  * <code>Gene</code>, use a {@link GeneBuilder}:
  * <pre>
  * <code>
- * Gene g = (new GeneBuilder())
- *     .addBlock(new Block("chr2", 1300, 1350, Strand.POSITIVE))
- *     .addBlock(new Block("chr2", 1400, 1450, Strand.POSITIVE))
+ * Gene g = Gene.builder()
+ *     .addBlock(new Annotation("chr2", 1300, 1350, Strand.POSITIVE))
+ *     .addBlock(new Annotation("chr2", 1400, 1450, Strand.POSITIVE))
  *     .addName("myGene")
  *     .addCodingRegion(1325, 1425)
  *     .build();
@@ -25,7 +25,6 @@ import java.util.Optional;
 public class Gene extends Annotation {
     
     protected final String name;
-    
     protected final int cdsStartPos;
     protected final int cdsEndPos;
     
@@ -37,7 +36,7 @@ public class Gene extends Annotation {
         this.cdsStartPos = b.cdsStart;
         this.cdsEndPos = b.cdsEnd;
     }
-    
+
     public Gene(Annotated a, String name, int cdsStartPos, int cdsEndPos) {
         super(a);
         this.name = name;
@@ -46,24 +45,35 @@ public class Gene extends Annotation {
     }
     
     /**
-     * Gets the name of this.
+     * Returns the name of this annotation.
      * <p>
-     * If this object doesn't have a name, this method returns the empty <code>String</code>
+     * If this annotation doesn't have a name, this method returns an empty
+     * <code>String</code>.
+     * 
+     * @return the name of this annotation
      */
     public String getName() {
         return name;
     }
 
+    /**
+     * Returns <code>true</code> if this annotation has a defined coding region.
+     * 
+     * @return <code>true</code> if this annotation has a defined coding region
+     */
     public boolean hasCodingRegion() {
         return cdsStartPos != cdsEndPos;
     }
     
     /**
-     * Gets the coding region of this object.
+     * Returns the coding region of this annotation.
      * <p>
-     * @return the coding region of this object, if it exists, as an
-     * <code>Annotation</code> wrapped in an <code>Optional</code>; otherwise,
-     * an empty <code>Optional</code>
+     * The coding region, if it exists, will be returned as an
+     * <code>Annotated</code> object wrapped in an <code>Optional</code>.
+     * If this annotation does not have a coding region, this method returns
+     * an empty <code>Optional</code>.
+     * 
+     * @return the coding region of this annotation
      */
     public Optional<Annotated> getCodingRegion() {
         if (cdsStartPos == cdsEndPos) {

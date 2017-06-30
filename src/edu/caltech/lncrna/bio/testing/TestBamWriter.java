@@ -33,7 +33,7 @@ public class TestBamWriter {
                 BamParser.newInstance(BAM);
              BamWriter bw = new BamWriter(tmp.toPath(), cs)) {
             
-            bp.getAlignmentStream().forEach(bw::addAlignment);
+            bp.getAlignmentStream().forEach(bw::writeSamRecord);
         }
         
         try (BamParser<? extends Aligned<? extends Alignment>> bp1 =
@@ -48,7 +48,8 @@ public class TestBamWriter {
         }
     }
     
-    @Test public void testBamWriterFirstRecord() throws IOException {
+    @Test
+    public void testBamWriterFirstRecord() throws IOException {
         
         CoordinateSpace cs = new CoordinateSpace(BAM);
         File tmp = File.createTempFile("tmp", "bam");
@@ -62,7 +63,7 @@ public class TestBamWriter {
             
             Iterator<? extends Alignment> aligned = bp.getAlignmentIterator();
             firstRecord = aligned.next();
-            bw.addAlignment(firstRecord);
+            bw.writeSamRecord(firstRecord);
         }
         
         try (BamParser<? extends Aligned<? extends Alignment>> bp =

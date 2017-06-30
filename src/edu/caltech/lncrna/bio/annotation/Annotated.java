@@ -8,8 +8,7 @@ import edu.caltech.lncrna.bio.datastructures.Interval;
 import edu.caltech.lncrna.bio.io.FormattableWithFields;
 
 /**
- * This interface defines the behavior of an object that has a location on a
- * reference genome.
+ * Defines the behavior of an object that has a location on a reference genome.
  * <p>
  * At a minimum, an <code>Annotated</code> object has
  * <ul>
@@ -33,132 +32,74 @@ Iterable<Annotated> {
     public String getReferenceName();
     
     /**
-     * Returns the start coordinate of this.
-     * <p>
      * The start coordinate of an annotation corresponds to the end of this
      * annotation closest to the start of the reference. To get the 5'-end or
      * the 3'-end of this annotation, use the {@link #getFivePrimePosition()}
      * method or the {@link #getThreePrimePosition()} method.
      * <p>
      * Annotation coordinates are zero-based, closed-open.
-     *  
-     * @return the start coordinate of this annotation
      */
     @Override
     public int getStart();
     
     /**
-     * Returns the end coordinate of this.
-     * <p>
      * The end coordinate of an annotation corresponds to the end of this
      * annotation closest to the end of the reference. To get the 5'-end or
      * the 3'-end of this annotation, use the {@link #getFivePrimePosition()}
      * method or the {@link #getThreePrimePosition()} method.
      * <p>
      * Annotation coordinates are zero-based, closed-open.
-     *  
-     * @return the end coordinate of this annotation
      */
     @Override
     public int getEnd();
 
-    /**
-     * Returns the 5'-position of this annotation.
-     * 
-     * @return the 5'-position of this annotation
-     */
     public int getFivePrimePosition();
     
-    /**
-     * Returns the 3'-position of this annotation.
-     * 
-     * @return the 3'-position of this annotation
-     */
     public int getThreePrimePosition();
     
     /**
-     * Returns the size of this.
-     * <p>
      * The size of an annotation is the sum of the sizes of the annotation's
      * blocks. In typical usage where exons are represented as blocks and
      * introns are implied as the gaps between the blocks, this method would
      * return the total exonic size.
-     * 
-     * @return the size of this annotation
      */
     public int getSize();
     
     /**
-     * Returns the span of this.
-     * <p>
      * The span of an annotation is simply the distance from the 5'-end to the
      * 3'-end. This method will include introns or gaps between blocks when
      * calculating the span.
-     * 
-     * @return the span of this annotation
      */
     public int getSpan();
-    
-    /**
-     * Returns the {@link Strand} of this.
-     * 
-     * @return the <code>Strand</code> of this annotation
-     */
+
     public Strand getStrand();
 
-    /**
-     * Returns the number of blocks making up this annotation.
-     * 
-     * @return the number of blocks in this annotation
-     */
     public int getNumberOfBlocks();
     
     /**
-     * Returns an <code>Iterator</code> over the blocks making up this
-     * annotation.
-     * 
-     * @return an iterator over this annotation's blocks
+     * @return an <code>Iterator</code> over this annotation's blocks or exons
      */
     public Iterator<Annotated> getBlockIterator();
     
     /**
-     * Returns the blocks making up this annotation as a {@link Stream}.
-     * 
-     * @return a stream of this annotation's blocks
+     * @return a <code>Stream</code> of this annotation's blocks or exons
      */
     public Stream<Annotated> getBlockStream();
-    
-    /**
-     * Returns <code>true</code> if this annotation overlaps another
-     * annotation.
-     * 
-     * @param other - the other annotation
-     * @returns <code>true</code> if this annotation overlaps another
-     * annotation
-     */
+
     public boolean overlaps(Annotated other);
     
     /**
-     * Returns <code>true</code> if this annotation is adjacent to another
-     * annotation.
-     * <p>
      * Two annotations are considered adjacent if the two do not overlap, and
      * one begins where the other ends.
      * 
      * @param other - the other annotation
-     * @return <code>true</code> if this annotation is adjacent to another
-     * annotation
      */
     public boolean isAdjacentTo(Annotated other);
     
     /**
-     * Returns the body of this annotation.
-     * <p>
      * An annotation's body is the minimal contiguous annotation that contains
      * all of the annotation's exons. In other words, the body is what one gets
      * by "filling in" all of the introns.
-     * 
-     * @returns the body of this annotation
      */
     public Annotated getBody();
     
@@ -232,38 +173,23 @@ Iterable<Annotated> {
     public Optional<Annotated> getIntrons();
 
     /**
-     * Returns an {@link Iterator} over the introns of this annotation.
-     * 
-     * @return an <code>Iterator</code> over the introns of this annotation.
+     * @return an <code>Iterator</code> over the introns of this annotation
      */
     public Iterator<Annotated> getIntronIterator();
     
     /**
-     * Returns the introns of this annotation as a {@link Stream}.
      * @return the introns of this annotation as a <code>Stream</code>
      */
     public Stream<Annotated> getIntronStream();
     
-    /**
-     * Returns <code>true</code> if this annotation is upstream of another.
-     * 
-     * @param other - the other annotation
-     * @return <code>true</code> if this annotation is upstream of another.
-     */
     public boolean isUpstreamOf(Annotated other);
 
-    /**
-     * Returns <code>true</code> if this annotation is downstream of another.
-     * 
-     * @param other - the other annotation
-     * @return <code>true</code> if this annotation is downstream of another.
-     */
     public boolean isDownstreamOf(Annotated other);
 
     /**
      * Returns a BED12 <code>String</code> representation of this annotation.
      * <p>
-     * The returned string is terminated with a newline, as is suitable for
+     * The returned string is terminated with a newline, and is suitable for
      * writing to a BED file.
      * <p>
      * BED12 is the standard BED format with all twelve fields.
