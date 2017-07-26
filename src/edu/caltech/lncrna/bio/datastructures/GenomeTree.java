@@ -12,16 +12,18 @@ import edu.caltech.lncrna.bio.annotation.Annotated;
 import edu.caltech.lncrna.bio.utils.FilteredIterator;
 
 /**
- * This class is a tree structure suitable for storing <code>Annotation</code>s
- * across an entire genome, e.g., the records from a BED file or a collection
- * of reads from a BAM file.
+ * This class represents a tree structure suitable for storing annotations
+ * (<code>Annotated</code> objects) across an entire genome, e.g., the records
+ * from a BED file or a collection of reads from a BAM file.
  */
 public class GenomeTree<T extends Annotated> implements Iterable<T> {
 
-    private Map<String, IntervalSetTree<T>> chroms;
+    private Map<String, IntervalTreeDuplicateBounds<T>> chroms;
     
     /**
-     * Constructs an empty <code>GenomeTree</code>.
+     * Class constructor.
+     * <p>
+     * Constructs an empty tree.
      */
     public GenomeTree() {
         chroms = new HashMap<>();
@@ -40,7 +42,7 @@ public class GenomeTree<T extends Annotated> implements Iterable<T> {
     public int getSize() {
         return chroms.values()
                      .stream()
-                     .mapToInt(IntervalSetTree::size)
+                     .mapToInt(IntervalTreeDuplicateBounds::size)
                      .sum();
     }
     
@@ -53,7 +55,7 @@ public class GenomeTree<T extends Annotated> implements Iterable<T> {
      */
     public boolean insert(T a) {
         return chroms.computeIfAbsent(a.getReferenceName(), 
-                t -> new IntervalSetTree<>()).insert(a);
+                t -> new IntervalTreeDuplicateBounds<>()).insert(a);
     }
     
     /**
@@ -62,7 +64,7 @@ public class GenomeTree<T extends Annotated> implements Iterable<T> {
      * @param a - the given <code>Annotated</code> object
      */
     public Iterator<T> getOverlappers(Annotated a) {
-        IntervalSetTree<T> tree = chroms.get(a.getReferenceName());
+        IntervalTreeDuplicateBounds<T> tree = chroms.get(a.getReferenceName());
         
         if (tree == null) {
             return Collections.emptyIterator();
@@ -79,7 +81,7 @@ public class GenomeTree<T extends Annotated> implements Iterable<T> {
      * @param a - the given <code>Annotated</code> object
      */
     public Iterator<T> getGeneBodyOverlappers(Annotated a) {
-        IntervalSetTree<T> tree = chroms.get(a.getReferenceName());
+        IntervalTreeDuplicateBounds<T> tree = chroms.get(a.getReferenceName());
         
         if (tree == null) {
             return Collections.emptyIterator();
@@ -130,12 +132,12 @@ public class GenomeTree<T extends Annotated> implements Iterable<T> {
         return StreamSupport.stream(spliterator(), false);
     }
     
-    private class ChromosomeIterator implements Iterator<IntervalSetTree<T>> {
+    private class ChromosomeIterator implements Iterator<IntervalTreeDuplicateBounds<T>> {
 
-        private Iterator<IntervalSetTree<T>> iter;
-        private IntervalSetTree<T> next;
+        private Iterator<IntervalTreeDuplicateBounds<T>> iter;
+        private IntervalTreeDuplicateBounds<T> next;
         
-        private ChromosomeIterator(Map<String, IntervalSetTree<T>> chromMap) {
+        private ChromosomeIterator(Map<String, IntervalTreeDuplicateBounds<T>> chromMap) {
             iter = chromMap.values().iterator();
             findNext();
         }
@@ -156,8 +158,8 @@ public class GenomeTree<T extends Annotated> implements Iterable<T> {
         }
 
         @Override
-        public IntervalSetTree<T> next() {
-            IntervalSetTree<T> rtrn = next;
+        public IntervalTreeDuplicateBounds<T> next() {
+            IntervalTreeDuplicateBounds<T> rtrn = next;
             findNext();
             return rtrn;
         }
@@ -168,7 +170,7 @@ public class GenomeTree<T extends Annotated> implements Iterable<T> {
         private final ChromosomeIterator chromIter;
         private Iterator<T> chromElements;
         
-        private TreeIterator(Map<String, IntervalSetTree<T>> chromMap) {
+        private TreeIterator(Map<String, IntervalTreeDuplicateBounds<T>> chromMap) {
             chromIter = new ChromosomeIterator(chromMap);
             if (chromIter.hasNext()) {
                 chromElements = chromIter.next().iterator();

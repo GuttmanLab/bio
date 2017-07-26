@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import edu.caltech.lncrna.bio.annotation.AssemblySize;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
@@ -20,9 +21,9 @@ import htsjdk.samtools.ValidationStringency;
  */
 public final class CoordinateSpace {
 
-    public final static CoordinateSpace MM9 = new CoordinateSpace(GenomeSize.MM9);
-    public final static CoordinateSpace MM10 = new CoordinateSpace(GenomeSize.MM10);
-    public final static CoordinateSpace HG19 = new CoordinateSpace(GenomeSize.HG19);
+    public final static CoordinateSpace MM9 = new CoordinateSpace(AssemblySize.MM9);
+    public final static CoordinateSpace MM10 = new CoordinateSpace(AssemblySize.MM10);
+    public final static CoordinateSpace HG19 = new CoordinateSpace(AssemblySize.HG19);
 
     private final Map<String, Integer> refSizes;
 

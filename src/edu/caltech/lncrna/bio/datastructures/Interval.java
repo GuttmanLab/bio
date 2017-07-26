@@ -1,34 +1,26 @@
 package edu.caltech.lncrna.bio.datastructures;
 
 /**
- * Objects that implement this interface can be represented as closed-open,
- * or [), intervals on the integer number line. 
+ * An <code>Interval</code> is any object which can be represented as a
+ * closed-open, or [), interval on the integer number line. 
  */
 public interface Interval extends Comparable<Interval> {
 
-    /**
-     * Returns the starting point of this.
-     */
     int getStart();
 
     /**
-     * Returns the ending point of this.
-     * <p>
-     * The interval does not include this point.
+     * An <code>Interval</code> is closed-open. It does not include the
+     * returned point.
      */
     int getEnd();
 
-    /**
-     * Returns the length of this.
-     */
     default int length() {
         return getEnd() - getStart();
     }
 
     /**
-     * Returns if this interval is adjacent to the specified interval.
-     * <p>
      * Two intervals are adjacent if either one ends where the other starts.
+     * 
      * @param interval - the interval to compare this one to
      * @return if this interval is adjacent to the specified interval.
      */
@@ -36,10 +28,25 @@ public interface Interval extends Comparable<Interval> {
         return getStart() == other.getEnd() || getEnd() == other.getStart();
     }
     
+    /**
+     * This method assumes that intervals are contiguous, i.e., there are no
+     * breaks or gaps in them.
+     * 
+     * @param o - the interval to compare this one to
+     * @return if this interval overlaps the specified interval
+     */
     default boolean overlaps(Interval o) {
         return getEnd() > o.getStart() && o.getEnd() > getStart();
     }
     
+    /**
+     * Ordering of intervals is done first by start coordinate, then by end
+     * coordinate.
+     * 
+     * @param o - the interval to compare this one to
+     * @return -1 if this interval is less than <code>o</code>; 1 if greater
+     * than; 0 if equal
+     */
     default int compareTo(Interval o) {
         if (getStart() > o.getStart()) {
             return 1;

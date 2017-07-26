@@ -61,8 +61,7 @@ extends Annotation implements Alignment, PairedSamRecord {
     }
     
     /**
-     * Returns the <code>PairOrientation</code> of this
-     * <code>PairedEndAlignment</code>.
+     * Returns the {@link PairOrientation} of this paired-end alignment.
      */
     public PairOrientation getPairOrientation() {
         return PairOrientation.getPairOrientation(read1, read2);
@@ -90,7 +89,7 @@ extends Annotation implements Alignment, PairedSamRecord {
     }
     
     /**
-     * Returns the insert size of this <code>PairedEndAlignment</code>.
+     * Returns the insert size of this paired-end alignment.
      * <p>
      * If the reads overlap, this method returns 0.
      */
@@ -105,7 +104,7 @@ extends Annotation implements Alignment, PairedSamRecord {
     } 
     
     /**
-     * Returns the insert of this <code>PairedEndAlignment</code>.
+     * Returns the insert of this paired-end alignment.
      * <p>
      * Returns an <code>Annotated</code> object representing the insert of
      * this, if it exists, wrapped in an <code>Optional</code>. Otherwise,
