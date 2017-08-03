@@ -397,26 +397,38 @@ public final class BedFileRecord extends Gene {
            sb.append(annot.getReferenceName() + "\t");
            sb.append(annot.getStart() + "\t");
            sb.append(annot.getEnd());
-           if (numFields == 3) return sb.toString();
+           if (numFields == 3) {
+               return sb.append(System.lineSeparator()).toString();
+           }
            
            // Name
            sb.append("\t" + name);
-           if (numFields == 4) return sb.toString();
+           if (numFields == 4) {
+               return sb.append(System.lineSeparator()).toString();
+           }
            
            // Score
            sb.append("\t" + score);
-           if (numFields == 5) return sb.toString();
+           if (numFields == 5) {
+               return sb.append(System.lineSeparator()).toString();
+           }
            
            // Strand
            sb.append("\t" + annot.getStrand().toString());
-           if (numFields == 6) return sb.toString();
+           if (numFields == 6) {
+               return sb.append(System.lineSeparator()).toString();
+           }
            
            // Thick
            sb.append("\t" + cdsStart + "\t" + cdsEnd);
-           if (numFields == 8) return sb.toString();
+           if (numFields == 8) {
+               return sb.append(System.lineSeparator()).toString();
+           }
 
            sb.append("\t" + color.getRed() + "," + color.getGreen() + "," + color.getBlue());
-           if (numFields == 9) return sb.toString();
+           if (numFields == 9) {
+               return sb.append(System.lineSeparator()).toString();
+           }
            
            sb.append("\t" + annot.getNumberOfBlocks() + "\t");
            Iterator<Annotated> blocks = annot.getBlockIterator();
@@ -432,8 +444,7 @@ public final class BedFileRecord extends Gene {
                // trailing comma after last block is OK
                sb.append((block.getStart() - annot.getStart()) + ",");
            }
-           sb.append(System.lineSeparator());
-           return sb.toString();
+           return sb.append(System.lineSeparator()).toString();
        }
     }
 }
