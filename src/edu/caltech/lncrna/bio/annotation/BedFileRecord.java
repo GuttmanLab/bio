@@ -154,56 +154,18 @@ public final class BedFileRecord extends Gene {
     
     @Override
     public String toFormattedBedString(int numFields) {
-        validateBedFieldNumber(numFields);
-        
-        // Required fields
-        final StringBuilder sb = new StringBuilder();
-        sb.append(ref + "\t");
-        sb.append(getStart() + "\t");
-        sb.append(getEnd());
-        if (numFields == 3) return sb.toString();
-        
-        // Name
-        sb.append("\t" + name);
-        if (numFields == 4) return sb.toString();
-        
-        // Score
-        sb.append("\t" + score);
-        if (numFields == 5) return sb.toString();
-        
-        // Strand
-        sb.append("\t" + strand.toString());
-        if (numFields == 6) return sb.toString();
-        
-        // Thick
-        sb.append("\t" + cdsStartPos + "\t" + cdsEndPos);
-        if (numFields == 8) return sb.toString();
-
-        sb.append("\t" + color.getRed() + "," + color.getGreen() + "," + color.getBlue());
-        if (numFields == 9) return sb.toString();
-        
-        sb.append("\t" + getNumberOfBlocks() + "\t");
-        Iterator<Annotated> blocks = getBlockIterator();
-        while (blocks.hasNext()) {
-            Annotated block = blocks.next();
-            // trailing comma after last block is OK
-            sb.append(block.getSize() + ",");
-        }
-        sb.append("\t");
-        blocks = getBlockIterator();
-        while (blocks.hasNext()) {
-            Annotated block = blocks.next();
-            // trailing comma after last block is OK
-            sb.append((block.getStart() - getStart()) + ",");
-        }
-        sb.append(System.lineSeparator());
-        return sb.toString();
+        return bedStringBuilder()
+                .addCodingRegion(this.cdsStartPos, this.cdsEndPos)
+                .addColor(this.color)
+                .addName(this.name)
+                .addScore(this.score)
+                .build(numFields);
     }
     
     public static BedBuilder builder() {
         return new BedBuilder();
     }
-    
+
     static void validateBedFieldNumber(int i) {
         if (IntStream.of(BedFileRecord.VALID_NUM_FIELDS)
                 .noneMatch(x -> x == i)) {
@@ -372,5 +334,106 @@ public final class BedFileRecord extends Gene {
 
             return new BedFileRecord(this);
         }
+    }
+    
+   public static final class BedStringBuilder {
+        
+       private final Annotated annot;
+       private double score;
+       private Color color;
+       private String name;
+       private int cdsStart;
+       private int cdsEnd;
+        
+       public BedStringBuilder(Annotated annot) {
+           this.annot = annot;
+           score = DEFAULT_SCORE;
+           color = DEFAULT_COLOR;
+           name = EMPTY_NAME;
+           cdsStart = annot.getStart();
+           cdsEnd = annot.getEnd();
+       }
+        
+       protected BedStringBuilder addScore(double score) {
+           this.score = score;
+           return this;
+       }
+        
+       protected BedStringBuilder addColor(Color color) {
+           this.color = color;
+           return this;
+       }
+        
+       protected BedStringBuilder addColor(int r, int g, int b) {
+           color = new Color(r, g, b);
+           return this;
+       }
+        
+       protected BedStringBuilder addColor(int rgb) {
+           this.color = new Color(rgb);
+           return this;
+       }
+        
+       protected BedStringBuilder addName(String s) {
+           this.name = s;
+           return this;
+       }
+        
+       protected BedStringBuilder addCodingRegion(int cdsStart, int cdsEnd) {
+           this.cdsStart = cdsStart;
+           this.cdsEnd = cdsEnd;
+           return this;
+       }
+       
+       protected String build() {
+           return build(BedFileRecord.MAX_FIELDS);
+       }
+       
+       protected String build(int numFields) {
+           validateBedFieldNumber(numFields);
+           
+           // Required fields
+           final StringBuilder sb = new StringBuilder();
+           sb.append(annot.getReferenceName() + "\t");
+           sb.append(annot.getStart() + "\t");
+           sb.append(annot.getEnd());
+           if (numFields == 3) return sb.toString();
+           
+           // Name
+           sb.append("\t" + name);
+           if (numFields == 4) return sb.toString();
+           
+           // Score
+           sb.append("\t" + score);
+           if (numFields == 5) return sb.toString();
+           
+           // Strand
+           sb.append("\t" + annot.getStrand().toString());
+           if (numFields == 6) return sb.toString();
+           
+           // Thick
+           sb.append("\t" + cdsStart + "\t" + cdsEnd);
+           if (numFields == 8) return sb.toString();
+
+           sb.append("\t" + color.getRed() + "," + color.getGreen() + "," + color.getBlue());
+           if (numFields == 9) return sb.toString();
+           
+           sb.append("\t" + annot.getNumberOfBlocks() + "\t");
+           Iterator<Annotated> blocks = annot.getBlockIterator();
+           while (blocks.hasNext()) {
+               Annotated block = blocks.next();
+               // trailing comma after last block is OK
+               sb.append(block.getSize() + ",");
+           }
+           sb.append("\t");
+           blocks = annot.getBlockIterator();
+           while (blocks.hasNext()) {
+               Annotated block = blocks.next();
+               // trailing comma after last block is OK
+               sb.append((block.getStart() - annot.getStart()) + ",");
+           }
+           sb.append(System.lineSeparator());
+           return sb.toString();
+       }
     }
 }

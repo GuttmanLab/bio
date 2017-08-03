@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
-import edu.caltech.lncrna.bio.datastructures.IntervalTree;
+import edu.caltech.lncrna.bio.datastructures.SimpleIntervalTree;
 
 /**
  * This class represents an <code>Iterator</code> that returns windows over an
@@ -19,7 +19,6 @@ import edu.caltech.lncrna.bio.datastructures.IntervalTree;
  * <li>recognizes when previously existing windows can no longer have any
  * records assigned to them and offers them to be returned by iteration
  * <p>
- * <p>
  * The annotation file must be sorted by reference and start position.
  * Currently, the code does not check this.
  * @param <T> - the type of annotation to iterate over
@@ -27,7 +26,7 @@ import edu.caltech.lncrna.bio.datastructures.IntervalTree;
 public final class WindowIterator<T extends Annotated>
 implements Iterator<Populated<T>> {
 
-    private IntervalTree<Populated<T>> windows;
+    private SimpleIntervalTree<Populated<T>> windows;
     private Iterator<T> underlyingIterator;
     private Iterator<Populated<T>> fullyPopulatedWindows;
     private int windowLength;
@@ -38,7 +37,7 @@ implements Iterator<Populated<T>> {
     public WindowIterator(Iterator<T> iter, int windowLength,
             int stepSize) {
         
-        windows = new IntervalTree<>();
+        windows = new SimpleIntervalTree<>();
         underlyingIterator = iter;
         fullyPopulatedWindows = Collections.emptyIterator();
         this.windowLength = windowLength;
@@ -86,7 +85,7 @@ implements Iterator<Populated<T>> {
         
         if (!minWindow.get().getReferenceName().equals(fragment.getReferenceName())) {
             Iterator<Populated<T>> rtrn = windows.iterator();
-            windows = new IntervalTree<>();
+            windows = new SimpleIntervalTree<>();
             return rtrn;
         }
 
@@ -98,7 +97,7 @@ implements Iterator<Populated<T>> {
         
         while (minWindow.isPresent() && minWindow.get().getEnd() < fragment.getStart()) {
             fullyPopulated.add(minWindow.get());
-            windows.deleteMin();
+            windows.removeMinimum();
             minWindow = windows.minimum();
         }
 
@@ -119,7 +118,7 @@ implements Iterator<Populated<T>> {
                         annotation.getReferenceName(), i,
                         i + windowLength, Strand.BOTH);
                 
-                Populated<T> window = windows.remove(matchingEmptyWindow)
+                Populated<T> window = windows.popSameBounds(matchingEmptyWindow)
                                              .orElse(matchingEmptyWindow);
                 
                 // Check for overlap in case window falls in an insert/intron
@@ -128,13 +127,13 @@ implements Iterator<Populated<T>> {
                 // window.
                 if (window.overlaps(annotation)) {
                     window.add(annotation);
-                    windows.insert(window);
+                    windows.add(window);
                 
                 // No overlap. If the window is populated, it overlaps some
                 // other read, so we need to keep it. Otherwise, it doesn't
                 // overlap anything, and we can discard it.
                 } else if (window.getPopulationSize() > 0) {
-                    windows.insert(window);
+                    windows.add(window);
                 }
             }
         }

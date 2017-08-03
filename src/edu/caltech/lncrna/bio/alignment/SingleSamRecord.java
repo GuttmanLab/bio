@@ -19,6 +19,7 @@ public interface SingleSamRecord extends SamRecord, Sequence {
     
     /**
      * Returns <code>true</code> if this read is paired.
+     * 
      * @return <code>true</code> if this read is paired
      */
     public boolean isPaired();
@@ -34,9 +35,9 @@ public interface SingleSamRecord extends SamRecord, Sequence {
     public boolean isMappedInProperPair();
     
     /**
-     * Returns <code>true</code if this read is mapped.
+     * Returns <code>true</code> if this read is mapped.
      * 
-     * @return <code>true</code if this read is mapped
+     * @return <code>true</code> if this read is mapped
      */
     public boolean isMapped();
     

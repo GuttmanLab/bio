@@ -1,24 +1,23 @@
 package edu.caltech.lncrna.bio.datastructures;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import edu.caltech.lncrna.bio.annotation.Annotated;
 import edu.caltech.lncrna.bio.utils.FilteredIterator;
 
 /**
  * This class represents a tree structure suitable for storing annotations
- * (<code>Annotated</code> objects) across an entire genome, e.g., the records
+ * ({@link Annotated} objects) across an entire genome, e.g., the annotations
  * from a BED file or a collection of reads from a BAM file.
  */
-public class GenomeTree<T extends Annotated> implements Iterable<T> {
+public final class GenomeTree<T extends Annotated> implements Collection<T> {
 
-    private Map<String, IntervalTreeDuplicateBounds<T>> chroms;
+    private final Map<String, IntervalTree<T>> chroms;
     
     /**
      * Class constructor.
@@ -29,42 +28,110 @@ public class GenomeTree<T extends Annotated> implements Iterable<T> {
         chroms = new HashMap<>();
     }
     
-    /**
-     * Whether or not this has any elements stored in it.
-     */
+    @Override
     public boolean isEmpty() {
-        return chroms.isEmpty() || getSize() == 0;
+        return chroms.isEmpty() || size() == 0;
     }
     
-    /**
-     * Gets the total number of elements in this.
-     */
-    public int getSize() {
+    @Override
+    public int size() {
         return chroms.values()
                      .stream()
-                     .mapToInt(IntervalTreeDuplicateBounds::size)
+                     .mapToInt(IntervalTree::size)
                      .sum();
     }
     
-    /**
-     * Inserts an <code>Annotated</code> object into this.
-     * @param a - the <code>Annotated</code> object to insert
-     * @return <code>true</code> if the addition resulted in a change to the
-     * tree; otherwise (if the value was already present, for example),
-     * <code>false</code>
-     */
-    public boolean insert(T a) {
+    @Override
+    public boolean contains(Object o) {
+        if (o instanceof Annotated) {
+            String ref = ((Annotated) o).getReferenceName();
+            IntervalTree<T> chromTree = chroms.get(ref);
+            if (chromTree == null) {
+                return false;
+            } else {
+                return chromTree.contains(o);
+            }
+        }
+        return false;
+    }
+    
+    @Override
+    public boolean containsAll(Collection<?> elements) {
+        for (Object element : elements) {
+            if (!contains(element)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    @Override
+    public boolean add(T a) {
         return chroms.computeIfAbsent(a.getReferenceName(), 
-                t -> new IntervalTreeDuplicateBounds<>()).insert(a);
+                t -> new DegenerateIntervalTree<>()).add(a);
+    }
+    
+    @Override
+    public boolean addAll(Collection<? extends T> elements) {
+        boolean rtrn = false;
+        for (T element : elements) {
+            rtrn = rtrn || this.add(element);
+        }
+        return rtrn;
+    }
+    
+    @Override
+    public boolean remove(Object o) {
+        if (o instanceof Annotated) {
+            String ref = ((Annotated) o).getReferenceName();
+            IntervalTree<T> chromTree = chroms.get(ref);
+            if (chromTree == null) {
+                return false;
+            } else {
+                return chromTree.remove(o);
+            }
+        }
+        return false;
+    }
+    
+    @Override
+    public boolean removeAll(Collection<?> elements) {
+        boolean rtrn = false;
+        for (Object element : elements) {
+            rtrn = rtrn || this.remove(element);
+        }
+        return rtrn;
+    }
+    
+    @Override
+    public void clear() {
+        chroms.clear();
+    }
+    
+    @Override
+    public Object[] toArray() {
+        Object[] rtrn = new Object[size()];
+        Iterator<T> elements = iterator();
+        int idx = 0;
+        while (idx < size()) rtrn[idx] = elements.next();
+        return rtrn;
     }
     
     /**
-     * Gets an <code>Iterator</code> over all elements in this which overlap
-     * a given <code>Annotated</code> object.
-     * @param a - the given <code>Annotated</code> object
+     * Returns an iterator over all elements in this tree that overlap an
+     * {@link Annotated} object.
+     * <p>
+     * Annotations which "overlap" only in intronic regions are not considered
+     * to overlap each other, and will not be returned by this iterator. If
+     * you instead want to check if two annotation bodies overlap (that is, if
+     * they overlap without considering the distinction between introns and
+     * exons) see {@link #bodyOverlappers(Annotated)}.
+     * 
+     * @param a - the annotation to check for overlap
+     * @return an iterator over all overlapping elements
      */
-    public Iterator<T> getOverlappers(Annotated a) {
-        IntervalTreeDuplicateBounds<T> tree = chroms.get(a.getReferenceName());
+    public Iterator<T> overlappers(Annotated a) {
+        IntervalTree<T> tree = chroms.get(a.getReferenceName());
         
         if (tree == null) {
             return Collections.emptyIterator();
@@ -76,12 +143,19 @@ public class GenomeTree<T extends Annotated> implements Iterable<T> {
     }
     
     /**
-     * Gets an <code>Iterator</code> over all elements whose hulls overlap a
-     * given <code>Annotated</code> object.
-     * @param a - the given <code>Annotated</code> object
+     * Returns an iterator over all elements in this tree that overlap the
+     * an {@link Annotated} object.
+     * <p>
+     * This method checks the entire body of each annotation (that is, it
+     * considers each annotation as a contiguous region with no introns) when
+     * determining overlap. If you wish to consider introns, see {@link
+     * #overlappers}.
+     *  
+     * @param a - the annotation to check for overlap
+     * @return an iterator over all overlapping elements
      */
-    public Iterator<T> getGeneBodyOverlappers(Annotated a) {
-        IntervalTreeDuplicateBounds<T> tree = chroms.get(a.getReferenceName());
+    public Iterator<T> bodyOverlappers(Annotated a) {
+        IntervalTree<T> tree = chroms.get(a.getReferenceName());
         
         if (tree == null) {
             return Collections.emptyIterator();
@@ -91,17 +165,18 @@ public class GenomeTree<T extends Annotated> implements Iterable<T> {
     }
     
     /**
-     * Get the number of elements that overlap the given <code>Annotated</code>
-     * object.
+     * Returns the number of elements that overlap an {@link Annotated} object.
+     * <p>
+     * This method simply iterates over all overlappers and increments an
+     * internal count. If you then need to perform some operation on these
+     * annotations, it will be more efficient to retrieve an iterator over them
+     * with {@link #overlappers(Annotation)}.
      * 
-     * This method will iterate over all of the elements, so if you need to
-     * count them in addition to performing some other operation, you probably
-     * want to work with the iterator directly by calling
-     * <code>getOverlappers</code>
-     * @param a - the given <code>Annotated</code> object
+     * @param i - the annotation to check for overlap
+     * @return the number of overlapping elements
      */
-    public int getNumOverlappers(Annotated a) {
-        Iterator<T> overlappers = getOverlappers(a);
+    public int numOverlappers(Annotated a) {
+        Iterator<T> overlappers = overlappers(a);
         int count = 0;
         while (overlappers.hasNext()) {
             overlappers.next();
@@ -111,33 +186,47 @@ public class GenomeTree<T extends Annotated> implements Iterable<T> {
     }
     
     /**
-     * Whether a given <code>Annotated</code> overlaps any element in this.
-     * @param a - the given <code>Annotated</code> object
+     * Returns whether any element in this tree overlaps the given
+     * {@link Annotated} object.
+     * 
+     * @param a - the annotation to check for overlap
+     * @return <code>true</code> if any element in this tree overlaps the
+     * given annotation; otherwise <code>false</code>
      */
     public boolean overlaps(Annotated a) {
-        return getOverlappers(a).hasNext();
+        return overlappers(a).hasNext();
     }
     
-    public boolean anyGeneBodyOverlaps(Annotated a) {
-        return getGeneBodyOverlappers(a).hasNext();
+    /**
+     * Returns whether any element in this tree overlaps the given
+     * {@link Annotated} object.
+     * 
+     * @param a - the annotation to check for overlap
+     * @return <code>true</code> if any element in this tree overlaps the
+     * given annotation; otherwise <code>false</code>
+     */
+    public boolean bodyOverlaps(Annotated a) {
+        return bodyOverlappers(a).hasNext();
     }
-
 
     @Override
     public Iterator<T> iterator() {
         return new TreeIterator(chroms);
     }
     
-    public Stream<T> stream() {
-        return StreamSupport.stream(spliterator(), false);
-    }
-    
-    private class ChromosomeIterator implements Iterator<IntervalTreeDuplicateBounds<T>> {
+    /**
+     * An iterator over the chromosomal interval-trees that make up this
+     * genome tree.
+     */
+    private final class ChromosomeIterator
+    implements Iterator<IntervalTree<T>> {
 
-        private Iterator<IntervalTreeDuplicateBounds<T>> iter;
-        private IntervalTreeDuplicateBounds<T> next;
+        private Iterator<IntervalTree<T>> iter;
+        private IntervalTree<T> next;
         
-        private ChromosomeIterator(Map<String, IntervalTreeDuplicateBounds<T>> chromMap) {
+        private ChromosomeIterator(
+                Map<String, IntervalTree<T>> chromMap) {
+
             iter = chromMap.values().iterator();
             findNext();
         }
@@ -158,19 +247,22 @@ public class GenomeTree<T extends Annotated> implements Iterable<T> {
         }
 
         @Override
-        public IntervalTreeDuplicateBounds<T> next() {
-            IntervalTreeDuplicateBounds<T> rtrn = next;
+        public IntervalTree<T> next() {
+            IntervalTree<T> rtrn = next;
             findNext();
             return rtrn;
         }
     }
     
-    private class TreeIterator implements Iterator<T> {
+    /**
+     * An iterator over the elements of this genome tree.
+     */
+    private final class TreeIterator implements Iterator<T> {
 
         private final ChromosomeIterator chromIter;
         private Iterator<T> chromElements;
         
-        private TreeIterator(Map<String, IntervalTreeDuplicateBounds<T>> chromMap) {
+        private TreeIterator(Map<String, IntervalTree<T>> chromMap) {
             chromIter = new ChromosomeIterator(chromMap);
             if (chromIter.hasNext()) {
                 chromElements = chromIter.next().iterator();
@@ -197,5 +289,17 @@ public class GenomeTree<T extends Annotated> implements Iterable<T> {
                 return chromElements.next();
             }
         }
+    }
+
+    @Override
+    public <U> U[] toArray(U[] a) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean retainAll(Collection<?> c) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException();
     }
 }

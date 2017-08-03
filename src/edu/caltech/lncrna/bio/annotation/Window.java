@@ -62,4 +62,11 @@ extends Annotation implements Populated<T>, Scored {
         return ref + ":" + getStart() + "-" + getEnd() + "(" + strand.toString() +
                 ") Population: " + getPopulationSize();
     }
+    
+    @Override
+    public String toFormattedBedString(int numFields) {
+        return bedStringBuilder()
+                .addScore(this.getPopulationSize())
+                .build(numFields);
+    }
 }

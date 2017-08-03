@@ -24,8 +24,8 @@ import org.junit.runners.Suite;
     
     // datastructures package
     TestGenomeTree.class,
-    TestIntervalTree.class,
-    TestIntervalSetTree.class,
+    TestSimpleIntervalTree.class,
+    TestDegenerateIntervalTree.class,
     
     // io package
     TestBamWriter.class,

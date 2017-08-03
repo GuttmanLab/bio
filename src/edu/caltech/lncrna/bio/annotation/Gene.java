@@ -1,8 +1,6 @@
 package edu.caltech.lncrna.bio.annotation;
 
-import java.awt.Color;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.Optional;
 
 /**
@@ -86,51 +84,10 @@ public class Gene extends Annotation {
 
     @Override
     public String toFormattedBedString(int numFields) {
-        BedFileRecord.validateBedFieldNumber(numFields);
-        
-        // Required fields
-        final StringBuilder sb = new StringBuilder();
-        sb.append(ref + "\t");
-        sb.append(getStart() + "\t");
-        sb.append(getEnd());
-        if (numFields == 3) return sb.toString();
-        
-        // Name
-        sb.append("\t" + name);
-        if (numFields == 4) return sb.toString();
-        
-        // Score
-        sb.append("\t" + BedFileRecord.DEFAULT_SCORE);
-        if (numFields == 5) return sb.toString();
-        
-        // Strand
-        sb.append("\t" + strand.toString());
-        if (numFields == 6) return sb.toString();
-        
-        // Thick
-        sb.append("\t" + cdsStartPos + "\t" + cdsEndPos);
-        if (numFields == 8) return sb.toString();
-        
-        Color c = BedFileRecord.DEFAULT_COLOR;
-        sb.append("\t" + c.getRed() + "," + c.getGreen() + "," + c.getBlue());
-        if (numFields == 9) return sb.toString();
-        
-        sb.append("\t" + getNumberOfBlocks() + "\t");
-        Iterator<Annotated> blocks = getBlockIterator();
-        while (blocks.hasNext()) {
-            Annotated block = blocks.next();
-            // trailing comma after last block is OK
-            sb.append(block.getSize() + ",");
-        }
-        sb.append("\t");
-        blocks = getBlockIterator();
-        while (blocks.hasNext()) {
-            Annotated block = blocks.next();
-            // trailing comma after last block is OK
-            sb.append((block.getStart() - getStart()) + ",");
-        }
-        sb.append(System.lineSeparator());
-        return sb.toString();
+        return bedStringBuilder()
+                .addCodingRegion(this.cdsStartPos, this.cdsEndPos)
+                .addName(this.name)
+                .build(numFields);
     }
     
     public static GeneBuilder builder() {

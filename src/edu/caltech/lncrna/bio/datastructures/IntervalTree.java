@@ -1,105 +1,137 @@
 package edu.caltech.lncrna.bio.datastructures;
 
+import java.util.Collection;
 import java.util.Iterator;
 
-public interface IntervalTree<T extends Interval> extends Iterable<T> {
-
-    public boolean isEmpty();
+/**
+ * This interface defines the behavior of trees containing {@link Interval}
+ * objects.
+ */
+public interface IntervalTree<T extends Interval> extends Collection<T> {
     
     /**
-     * @return the number of intervals stored in this tree
-     */
-    public int size();
-    
-    public boolean contains(Interval t);
-    
-    /**
-     * Returns an iterator over this tree's elements.
+     * Returns an iterator over the minimum elements of this tree.
      * <p>
-     * The iterator traverses the elements in ascending order.
+     * If there is no minimum element (this is, if this tree is empty),
+     * this method returns an empty iterator.
      * 
-     * @return an iterator over this tree's elements
+     * @return an iterator over the minimum elements of this tree
      */
-    public Iterator<T> iterator();
+    public Iterator<T> minima();
     
     /**
-     * Returns an iterator of this tree's elements that overlap the specified
-     * interval.
+     * Returns an iterator over the maximum elements of this tree.
+     * <p>
+     * If there is no maximum element (this is, if this tree is empty),
+     * this method returns an empty iterator.
      * 
-     * @param i - the specified interval
-     * @return an iterator over this tree's overlapping elements
+     * @return an iterator over the maximum elements of this tree
+     */
+    public Iterator<T> maxima();
+    
+    /**
+     * Returns an iterator over all elements in this tree that overlap the
+     * given interval.
+     * 
+     * @param i - the interval to check for overlap
+     * @return an iterator over all overlapping elements
      */
     public Iterator<T> overlappers(Interval i);
-    
+
     /**
-     * Whether or not any intervals within this tree overlap the specified
-     * interval.
+     * Returns whether any element in this tree overlaps the given interval.
      * 
-     * @param i - the specified interval to check for overlap
-     * @return <code>true</code> if any elements in this tree overlap the
-     * specified interval; otherwise, <code>false</code>.
+     * @param i - the interval to check for overlap
+     * @return <code>true</code> if any element in this tree overlaps the
+     * given interval; otherwise <code>false</code>
      */
     public boolean overlaps(Interval i);
     
     /**
-     * The number of overlapping elements in this tree.
+     * Returns the number of elements in this tree that overlap the given
+     * interval.
+     * <p>
+     * This method simply iterates over all overlappers and increments an
+     * internal count. If you then need to perform some operation on these
+     * intervals, it will be more efficient to retrieve an iterator over them
+     * with {@link #overlappers(Interval)}.
      * 
-     * @param i - the specified interval to check for overlap
-     * @return the number of elements in this tree that overlap the specified
-     * interval
+     * @param i - the interval to check for overlap
+     * @return the number of overlapping intervals
      */
     public int numOverlappers(Interval i);
     
-    public boolean insert(T t);
-    
-    public boolean delete(T t);
+    /**
+     * Returns an iterator over the least elements that overlap the given
+     * interval.
+     *
+     * @param i - the interval to check for overlap
+     * @return an iterator over the least (or smallest) elements that overlap
+     */
+    public Iterator<T> minimumOverlappers(Interval i);
     
     /**
-     * Deletes all elements from this tree with matching start and end
-     * coordinates.
+     * Returns an iterator over the elements in the node following the given
+     * element's node.
      * <p>
-     * This method returns <code>true</code> if an element is deleted, thereby
-     * altering the tree. If no matching element is found, the tree
-     * remains unchanged and this method returns <code>false</code>.
+     * If the passed interval corresponds with the last node in this tree, this
+     * method returns an empty iterator.
      * <p>
-     * For some implementations of <code>IntervalTree</code>, the start and end
-     * coordinates uniquely define an element. For others, the start and end
-     * coordinates define multiple elements. When the latter is the case, all
-     * such elements are deleted.
+     * If this tree does not contain a node that corresponds to the given
+     * interval, this method returns an empty iterator.
      * 
-     * @param start - the start coordinate of the intervals to delete
-     * @param end - the end coordinate of the intervals to delete
-     * @return if the deletion is successful
+     * @param i - the interval to check
+     * @return an iterator over the following intervals
      */
-    public boolean delete(int start, int end);
+    public Iterator<T> successors(Interval i);
     
     /**
-     * Deletes the minimal interval(s) from this tree.
+     * Returns an iterator over the elements in the node preceding the given
+     * element's node.
      * <p>
-     * If there is no minimal interval (that is, if the tree is empty), this
-     * tree remains unchanged.
+     * If the passed interval corresponds with the first node in this tree, this
+     * method returns an empty iterator.
      * <p>
-     * For some implementations of <code>IntervalTree</code>, if a minimal
-     * interval exists, it is unique. For others, there may be multiple minimal
-     * intervals. When the latter is the case, all such intervals are deleted.
+     * If this tree does not contain a node that corresponds to the given
+     * interval, this method returns an empty iterator.
      * 
-     * @return whether or not an interval was successfully removed from this
-     * tree
+     * @param i - the interval to check
+     * @return an iterator over the preceding intervals
      */
-    public boolean deleteMin();
+    public Iterator<T> predecessors(Interval i);
     
     /**
-     * Deletes the maximal interval(s) from this tree.
+     * Removes all of the minimum elements from this tree.
      * <p>
-     * If there is no maximal interval (that is, if the tree is empty), this
-     * tree remains unchanged.
-     * <p>
-     * For some implementations of <code>IntervalTree</code>, if a maximal
-     * interval exists, it is unique. For others, there may be multiple maximal
-     * intervals. When the latter is the case, all such intervals are deleted.
+     * If the tree does not contain any minimum elements (that is, if the tree
+     * is empty), this method does nothing.
      * 
-     * @return whether or not an interval was successfully removed from this
-     * tree
+     * @return <code>true</code> if elements were removed and the tree changed;
+     * <code>false</code> if the tree was empty and no elements were removed
      */
-    public boolean deleteMax();
+    public boolean removeMinima();
+    
+    /**
+     * Removes all of the maximum elements from this tree.
+     * <p>
+     * If the tree does not contain any maximum elements (that is, if the tree
+     * is empty), this method does nothing.
+     * 
+     * @return <code>true</code> if elements were removed and the tree changed;
+     * <code>false</code> if the tree was empty and no elements were removed
+     */
+    public boolean removeMaxima();
+    
+    /**
+     * Removes all elements that overlap the given interval from this tree.
+     * <p>
+     * If no elements overlap the interval, this method does nothing.
+     * 
+     * @param i - the interval to check for overlap
+     * @return <code>true</code> if elements were removed and the tree changed;
+     * <code>false</code> if there were no overlappers and no elements were
+     * removed
+     */
+    public boolean removeOverlappers(Interval i);
+    
 }

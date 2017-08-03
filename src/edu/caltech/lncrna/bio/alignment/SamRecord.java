@@ -10,6 +10,7 @@ public interface SamRecord {
     
     /**
      * Adds this object to a <code>SAMFileWriter</code> to be written to disk.
+     * 
      * @param writer - the writer to add this read to
      */
     public void writeTo(SAMFileWriter writer);
